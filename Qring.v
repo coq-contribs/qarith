@@ -36,35 +36,38 @@ Add Setoid Ring Q Qeq Q_Setoid Qplus Qmult Qone Qzero Qopp Qeq_bool
 
 (* Exemple of use: *)
 
-Lemma Qring_example1 : 
- forall x y z : Q, (x+y)*z ==  (x*z)+(y*z).
+Section Examples. 
+
+Let ex1 : forall x y z : Q, (x+y)*z ==  (x*z)+(y*z).
 intros.
 ring.
 Qed.
 
-Lemma Qring_example2 : forall x y : Q, x+y == y+x.
+Let ex2 : forall x y : Q, x+y == y+x.
 intros. 
 ring.
 Qed.
 
-Lemma Qring_example3 : forall x y z : Q, (x+y)+z == x+(y+z).
+Let ex3 : forall x y z : Q, (x+y)+z == x+(y+z).
 intros.
 ring.
 Qed.
 
-Lemma Qring_example4 : (inject_Z 1)+(inject_Z 1)==(inject_Z 2).
+Let ex4 : (inject_Z 1)+(inject_Z 1)==(inject_Z 2).
 ring.
 Qed.
 
-Lemma Qring_example5 : Qone+Qone ==2#1.
+Let ex5 : Qone+Qone ==2#1.
 ring.
 Qed.
 
-Lemma Qring_example6 : 1#1+1#1 == 2#1.
+Let ex6 : 1#1+1#1 == 2#1.
 ring.
 Qed.
 
-Lemma Qring_example7 : forall x : Q, x-x== 0#1.
+Let ex7 : forall x : Q, x-x== 0#1.
 intro.
 ring.
 Qed.
+
+End Examples.
