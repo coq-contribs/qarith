@@ -48,9 +48,6 @@ Qreals.v: Unlike Ring, the Field tactic does currently not work over
 
 Qreduction.v: Transforming a fraction into its reduced form. 
 
-Qsyntax.v: An attempt of pretty syntax. Will probably not work correctly 
- until coq V8 new syntax.
-
 
 
 
