@@ -120,8 +120,8 @@ Ltac Kill_times := repeat rewrite times2mult.
 
 Add Morphism Qplus : Qplus_comp. 
 unfold Qeq, Qplus in |- *; simpl in |- *.
-intros (p1, p2) (q1, q2) (r1, r2) (s1, s2); simpl in |- *.
-intros; Kill_times; ring.
+intros (p1, p2) (q1, q2) H (r1, r2) (s1, s2) H0; simpl in H, H0 |- *.
+Kill_times; ring.
 assert (E1 : (p1 * (Zpos s2 * Zpos q2))%Z = (p1 * Zpos q2 * Zpos s2)%Z);
  [ ring | rewrite E1; rewrite H ].
 assert (E2 : (Zpos s2 * (Zpos q2 * r1))%Z = (r1 * Zpos s2 * Zpos q2)%Z);
@@ -142,7 +142,7 @@ Qed.
 
 Add Morphism Qmult : Qmult_comp.
 unfold Qeq in |- *; simpl in |- *.
-intros (p1, p2) (q1, q2) (r1, r2) (s1, s2); simpl in |- *.
+intros (p1, p2) (q1, q2) H (r1, r2) (s1, s2) H0; simpl in H, H0 |- *.
 intros; Kill_times; ring.
 assert (E1 : (Zpos p2 * (q1 * s1))%Z = (q1 * Zpos p2 * s1)%Z);
  [ ring | rewrite E1; rewrite <- H ].
@@ -172,8 +172,11 @@ setoid_rewrite H; setoid_rewrite H0; auto with qarith.
 Qed.
 
 Add Morphism Qle : Qle_comp.
+cut (forall x1 x2: Q, Qeq x1 x2 -> forall x3 x4: Q, Qeq x3 x4 -> Qle x1 x3 -> Qle x2 x4).
+split; apply H; assumption || (apply Qeq_sym ; assumption).
+
 unfold Qeq, Qle in |- *; simpl in |- *.
-intros (p1, p2) (q1, q2) (r1, r2) (s1, s2); simpl in |- *.
+intros (p1, p2) (q1, q2) H (r1, r2) (s1, s2) H0; simpl in H, H0 |- *.
 intros.
 apply Zmult_le_reg_r with (Zpos p2).
 unfold Zgt in |- *; auto.
@@ -197,8 +200,11 @@ auto with zarith.
 Qed.
 
 Add Morphism Qlt : Qlt_comp.
+cut (forall x1 x2: Q, Qeq x1 x2 -> forall x3 x4: Q, Qeq x3 x4 -> Qlt x1 x3 -> Qlt x2 x4).
+split; apply H; assumption || (apply Qeq_sym ; assumption).
+
 unfold Qeq, Qlt in |- *; simpl in |- *.
-intros (p1, p2) (q1, q2) (r1, r2) (s1, s2); simpl in |- *.
+intros (p1, p2) (q1, q2) H (r1, r2) (s1, s2) H0; simpl in H,H0 |- *.
 intros.
 apply Zgt_lt.
 generalize (Zlt_gt _ _ H1); clear H1; intro H1.
@@ -494,7 +500,3 @@ intros; apply Zmult_le_reg_r with (c1*Zpos c2)%Z; auto with zarith.
 ring.
 ring.
 Qed.
-
-
-
-
