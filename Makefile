@@ -52,7 +52,6 @@ CAMLOPTC=ocamlopt -c
 CAMLLINK=ocamlc
 CAMLOPTLINK=ocamlopt
 COQDEP=$(COQBIN)coqdep -c
-COQVO2XML=coq_vo2xml
 GRAMMARS=grammar.cma
 CAMLP4EXTEND=pa_extend.cmo pa_ifdef.cmo q_MLast.cmo
 PP=-pp "camlp4o -I . -I $(COQTOP)/parsing $(CAMLP4EXTEND) $(GRAMMARS) -impl"
@@ -103,14 +102,7 @@ all.ps: $(VFILES)
 all-gal.ps: $(VFILES)
 	$(COQDOC) -ps -g -o $@ `$(COQDEP) -sort -suffix .v $(VFILES)`
 
-xml:: .xml_time_stamp
-.xml_time_stamp: QArith_base.vo\
-  Qreals.vo\
-  Qreduction.vo\
-  Qring.vo\
-  QArith.vo
-	$(COQVO2XML) $(COQFLAGS) $(?:%.o=%)
-	touch .xml_time_stamp
+
 
 ####################
 #                  #
@@ -118,7 +110,7 @@ xml:: .xml_time_stamp
 #                  #
 ####################
 
-.PHONY: all opt byte archclean clean install depend xml
+.PHONY: all opt byte archclean clean install depend html
 
 .SUFFIXES: .v .vo .vi .g .html .tex .g.tex .g.html
 
@@ -156,8 +148,6 @@ include .depend
 	$(COQDEP) -i $(COQLIBS) *.v *.ml *.mli >.depend
 	$(COQDEP) $(COQLIBS) -suffix .html *.v >>.depend
 
-xml::
-
 install:
 	mkdir -p `$(COQC) -where`/user-contrib
 	cp -f *.vo `$(COQC) -where`/user-contrib
@@ -166,12 +156,15 @@ Makefile: Make
 	mv -f Makefile Makefile.bak
 	$(COQBIN)coq_makefile -f Make -o Makefile
 
+
 clean:
 	rm -f *.cmo *.cmi *.cmx *.o *.vo *.vi *.g *~
 	rm -f all.ps all-gal.ps $(HTMLFILES) $(GHTMLFILES)
 
 archclean:
 	rm -f *.cmx *.o
+
+html:
 
 # WARNING
 #

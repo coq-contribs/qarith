@@ -11,39 +11,50 @@ Require Export Setoid.
 
 Record Q : Set := Qmake {Qnum : Z; Qden : positive}.
 
+Delimit Scope Q_scope with Q.
+Bind Scope Q_scope with Q.
+Arguments Scope Qmake [Z_scope positive_scope].
+Open Scope Q_scope.
+
+Notation "a # b" := (Qmake a b) (at level 20, no associativity) : Q_scope.
+
 Definition inject_Z (x : Z) := Qmake x 1. 
 
 Notation QDen := (fun q => Zpos (Qden q)).
-
-Notation Qzero := (Qmake 0 1). 
-Notation Qone := (Qmake 1 1).
+(* Notation Qzero := (Qmake 0 1). *)
+(* Notation Qone := (Qmake 1 1). *)
 
 Definition Qeq (p q : Q) := (Qnum p * QDen q)%Z = (Qnum q * QDen p)%Z.
-
 Definition Qle (x y : Q) := (Qnum x * QDen y <= Qnum y * QDen x)%Z.
-
 Definition Qlt (x y : Q) := (Qnum x * QDen y < Qnum y * QDen x)%Z.
-
 Notation Qgt := (fun x y : Q => Qlt y x).
 Notation Qge := (fun x y : Q => Qle y x).
+
+Infix "==" := Qeq (at level 70, no associativity) : Q_scope. 
+Infix "<" := Qlt : Q_scope.
+Infix "<=" := Qle : Q_scope.
+Infix ">" := Qgt : Q_scope. 
+Infix ">=" := Qge : Q_scope. 
+Notation "x <= y <= z" := (x<=y/\y<=z) : Q_scope.
+
 
 Hint Unfold Qeq Qle Qlt: qarith.
 
 (* Properties of equality. *)
 
-Theorem Qeq_refl : forall x : Q, Qeq x x.
+Theorem Qeq_refl : forall x, x == x.
 Proof.
  auto with qarith.
 Qed.
 
-Theorem Qeq_sym : forall x y : Q, Qeq x y -> Qeq y x. 
+Theorem Qeq_sym : forall x y, x == y -> y == x. 
 Proof.
  auto with qarith.
 Qed.
 
 Hint Extern 5 (?X1 <> ?X2) => intro; discriminate: qarith.
 
-Theorem Qeq_trans : forall x y z : Q, Qeq x y -> Qeq y z -> Qeq x z.
+Theorem Qeq_trans : forall x y z, x == y -> y == z -> x == z.
 Proof.
 unfold Qeq in |- *; intros.
 apply Zmult_reg_l with (QDen y). 
@@ -54,7 +65,7 @@ Qed.
 
 (* Furthermore, this equality is decidable: *)
 
-Theorem Qeq_dec : forall x y : Q, {Qeq x y} + {~ Qeq x y}.
+Theorem Qeq_dec : forall x y, {x==y} + {~ x==y}.
 Proof.
  intros; case (Z_eq_dec (Qnum x * QDen y) (Qnum y * QDen x)); auto.
 Defined.
@@ -76,22 +87,29 @@ Hint Resolve (Seq_trans Q Qeq Q_Setoid): qarith.
    in the straightforward way: *)
 
 Definition Qplus (x y : Q) :=
-  Qmake (Qnum x * QDen y + Qnum y * QDen x) (Qden x * Qden y).
+  (Qnum x * QDen y + Qnum y * QDen x) # (Qden x * Qden y).
 
-Definition Qmult (x y : Q) := Qmake (Qnum x * Qnum y) (Qden x * Qden y). 
+Definition Qmult (x y : Q) := (Qnum x * Qnum y) # (Qden x * Qden y). 
 
-Definition Qopp (x : Q) := Qmake (- Qnum x) (Qden x).
+Definition Qopp (x : Q) := (- Qnum x) # (Qden x).
 
 Definition Qminus (x y : Q) := Qplus x (Qopp y).
 
 Definition Qinv (x : Q) :=
   match Qnum x with
-  | Z0 => Qzero
-  | Zpos p => Qmake (QDen x) p
-  | Zneg p => Qmake (Zneg (Qden x)) p
+  | Z0 => 0#1
+  | Zpos p => (QDen x)#p
+  | Zneg p => (Zneg (Qden x))#p
   end.
 
 Definition Qdiv (x y : Q) := Qmult x (Qinv y).
+
+Infix "+" := Qplus : Q_scope.
+Notation "- x" := (Qopp x) : Q_scope.
+Infix "-" := Qminus : Q_scope.
+Infix "*" := Qmult : Q_scope.
+Notation "/ x" := (Qinv x) : Q_scope. 
+Infix "/" := Qdiv : Q_scope. 
 
 Lemma times2mult : forall p q : positive, Zpos (p * q) = (Zpos p * Zpos q)%Z.
 Proof.
@@ -206,16 +224,14 @@ Qed.
 
 (* More properties of addition. *)
 
-Theorem Qplus_simpl :
- forall n m p q : Q, Qeq n m -> Qeq p q -> Qeq (Qplus n p) (Qplus m q). 
+Theorem Qplus_simpl : forall n m p q, n == m -> p == q -> n+p == m+q. 
 Proof.
  intros; setoid_rewrite H; setoid_rewrite H0; auto with qarith.
 Qed.
 
 (* Addition is associative: *)
 
-Theorem Qplus_assoc :
- forall x y z : Q, Qeq (Qplus x (Qplus y z)) (Qplus (Qplus x y) z).
+Theorem Qplus_assoc : forall x y z, x+(y+z)==(x+y)+z.
 Proof.
  intros (x1, x2) (y1, y2) (z1, z2).
  unfold Qeq, Qplus in |- *; simpl in |- *; repeat rewrite times2mult; ring.
@@ -223,7 +239,7 @@ Qed.
 
 (* [Qzero] is a neutral element for addition: *)
 
-Theorem Qzero_right : forall x : Q, Qeq (Qplus x Qzero) x.
+Theorem Qzero_right : forall x, (x+ 0#1)==x.
 Proof.
  intros (x1, x2); unfold Qeq, Qplus in |- *; simpl in |- *.
  rewrite Pmult_comm; simpl in |- *; ring.
@@ -231,7 +247,7 @@ Qed.
 
 (* Commutativity of addition: *)
 
-Theorem Qplus_sym : forall x y : Q, Qeq (Qplus x y) (Qplus y x).
+Theorem Qplus_sym : forall x y, x+y == y+x.
 Proof.
  intros (x1, x2); unfold Qeq, Qplus in |- *; simpl in |- *.
  intros; rewrite Pmult_comm; ring.
@@ -239,22 +255,21 @@ Qed.
 
 (*  Qopp is a well defined unary operation: *)
 
-Lemma Qopp_simpl : forall x y : Q, Qeq x y -> Qeq (Qopp x) (Qopp y).
+Lemma Qopp_simpl : forall x y, x==y -> -x == -y.
 Proof.
  intros; setoid_rewrite H; auto with qarith.
 Qed.
 
 (* The group equation for Qopp *)
 
-Theorem Qplus_inverse_r : forall q : Q, Qeq (Qplus q (Qopp q)) Qzero.
+Theorem Qplus_inverse_r : forall q, q+(-q) == 0#1.
 Proof.
  red in |- *; simpl in |- *; intro; ring.
 Qed.
 
 (** Multiplication. *)
 
-Theorem Qmult_simpl :
- forall n m p q : Q, Qeq n m -> Qeq p q -> Qeq (Qmult n p) (Qmult m q). 
+Theorem Qmult_simpl :  forall n m p q, n==m -> p==q -> n*p==m*q. 
 Proof.
  intros; setoid_rewrite H; setoid_rewrite H0; auto with qarith.
 Qed.
@@ -262,15 +277,14 @@ Qed.
 
 (* Qmult is associative: *)
 
-Theorem Qmult_assoc :
- forall n m p : Q, Qeq (Qmult n (Qmult m p)) (Qmult (Qmult n m) p).
+Theorem Qmult_assoc : forall n m p, n*(m*p)==(n*m)*p.
 Proof.
  intros; red in |- *; simpl in |- *; rewrite Pmult_assoc; ring.
 Qed.
 
 (* Qone is a neutral element for multiplication: *)
 
-Theorem Qmult_n_1 : forall n : Q, Qeq (Qmult n Qone) n.
+Theorem Qmult_n_1 : forall n, n*(1#1)==n.
 Proof.
  intro; red in |- *; simpl in |- *.
  rewrite Zmult_1_r with (n := Qnum n).
@@ -279,13 +293,12 @@ Qed.
 
 (* The commutativity for Qmult: *)
 
-Theorem Qmult_sym : forall x y : Q, Qeq (Qmult x y) (Qmult y x).
+Theorem Qmult_sym : forall x y, x*y==y*x.
 Proof.
  intros; red in |- *; simpl in |- *; rewrite Pmult_comm; ring.
 Qed.
 
-Theorem Qmult_plus_distr_r :
- forall x y z : Q, Qeq (Qmult x (Qplus y z)) (Qplus (Qmult x y) (Qmult x z)). 
+Theorem Qmult_plus_distr_r : forall x y z, x*(y+z)==(x*y)+(x*z).
 Proof.
 intros (x1, x2) (y1, y2) (z1, z2).
 unfold Qeq, Qmult, Qplus in |- *; simpl in |- *; Kill_times; ring.
@@ -293,15 +306,14 @@ Qed.
 
 (* Here we prove that Qone is not equal to Qzero: *)
 
-Theorem Qone_neq_Qzero : ~ Qeq Qone Qzero.
+Theorem Qone_neq_Qzero : ~ 1#1 == 0#1.
 Proof.
  unfold Qeq in |- *; auto with qarith.
 Qed.
 
 (* A property of multiplication which says if [x<>0] and [x*y=0] then [y=0]: *)
 
-Theorem Qmult_eq :
- forall x y : Q, ~ Qeq x Qzero -> Qeq (Qmult x y) Qzero -> Qeq y Qzero.
+Theorem Qmult_eq : forall x y, ~ x == 0#1 -> x*y == 0#1 -> y == 0#1.
 Proof.
  intros (x1, x2) (y1, y2).
  unfold Qeq, Qmult in |- *; simpl in |- *; intros.
@@ -312,16 +324,14 @@ Qed.
 
 (** Inverse and division. *) 
 
-Theorem Qinv_Qmult :
- forall x : Q, ~ Qeq x Qzero -> Qeq (Qmult x (Qinv x)) Qone. 
+Theorem Qinv_Qmult : forall x, ~ x == 0#1 -> x*(/x) == 1#1.
 Proof.
  intros (x1, x2); unfold Qeq, Qdiv, Qmult in |- *; case x1; simpl in |- *;
   intros; Kill_times; try ring.
  elim H; auto. 
 Qed.
 
-Theorem Qmult_Qdiv :
- forall x y : Q, ~ Qeq y Qzero -> Qeq (Qdiv (Qmult x y) y) x.
+Theorem Qmult_Qdiv : forall x y, ~ y == 0#1 -> (x*y)/y == x.
 Proof.
  intros; unfold Qdiv in |- *.
  setoid_rewrite <- (Qmult_assoc x y (Qinv y)).
@@ -329,8 +339,7 @@ Proof.
  apply Qmult_n_1.
 Qed.
 
-Theorem Qdiv_Qmult :
- forall x y : Q, ~ Qeq y Qzero -> Qeq (Qmult y (Qdiv x y)) x.
+Theorem Qdiv_Qmult : forall x y, ~ y == 0#1 -> y*(x/y) == x.
 Proof.
  intros; unfold Qdiv in |- *.
  setoid_rewrite (Qmult_assoc y x (Qinv y)).
@@ -341,17 +350,17 @@ Qed.
 
 (** Properties of order upon Q. *)
 
-Lemma Qle_refl : forall x : Q, Qle x x.
+Lemma Qle_refl : forall x, x<=x.
 Proof.
 unfold Qle in |- *; auto with zarith.
 Qed.
 
-Lemma Qle_antisym : forall x y : Q, Qle x y -> Qle y x -> Qeq x y.
+Lemma Qle_antisym : forall x y, x<=y -> y<=x -> x==y.
 Proof.
 unfold Qle, Qeq in |- *; auto with zarith.
 Qed.
 
-Lemma Qle_trans : forall x y z : Q, Qle x y -> Qle y z -> Qle x z.
+Lemma Qle_trans : forall x y z, x<=y -> y<=z -> x<=z.
 Proof.
 unfold Qle in |- *; intros (x1, x2) (y1, y2) (z1, z2); simpl in |- *; intros.
 apply Zmult_le_reg_r with (Zpos y2).
@@ -367,12 +376,12 @@ replace (z1 * Zpos x2 * Zpos y2)%Z with (z1 * Zpos y2 * Zpos x2)%Z;
 apply Zmult_le_compat_r; auto with zarith. 
 Qed.
 
-Lemma Qlt_not_eq : forall x y : Q, Qlt x y -> ~ Qeq x y.
+Lemma Qlt_not_eq : forall x y, x<y -> ~ x==y.
 Proof.
 unfold Qlt, Qeq in |- *; auto with zarith.
 Qed.
 
-Lemma Qlt_trans : forall x y z : Q, Qlt x y -> Qlt y z -> Qlt x z.
+Lemma Qlt_trans : forall x y z, x<y -> y<z -> x<z.
 Proof.
 unfold Qlt in |- *; intros (x1, x2) (y1, y2) (z1, z2); simpl in |- *; intros.
 apply Zgt_lt.
@@ -391,47 +400,47 @@ Qed.
 
 (** [x<y] iff [~(y<=x)] *)
 
-Lemma not_Qlt : forall x y : Q, ~ Qlt x y -> Qle y x.
+Lemma not_Qlt : forall x y, ~ x<y -> y<=x.
 Proof.
 unfold Qle, Qlt in |- *; auto with zarith.
 Qed.
 
-Lemma not_Qle : forall x y : Q, ~ Qlt x y -> Qle y x.
+Lemma not_Qle : forall x y, ~ x<=y -> y<x.
 Proof.
 unfold Qle, Qlt in |- *; auto with zarith.
 Qed.
 
-Lemma Qlt_not_le : forall x y : Q, Qlt x y -> ~ Qle y x.
+Lemma Qlt_not_le : forall x y, x<y -> ~ y<=x.
 Proof.
 unfold Qle, Qlt in |- *; auto with zarith.
 Qed.
 
-Lemma Qle_not_lt : forall x y : Q, Qle x y -> ~ Qlt y x.
+Lemma Qle_not_lt : forall x y, x<=y -> ~ y<x.
 Proof.
 unfold Qle, Qlt in |- *; auto with zarith.
 Qed.
 
 (** Large = strict or equal *)
 
-Lemma Qlt_le_weak : forall x y : Q, Qlt x y -> Qle x y.
+Lemma Qlt_le_weak : forall x y, x<y -> x<=y.
 Proof.
 unfold Qle, Qlt in |- *; auto with zarith.
 Qed.
 
-Lemma Qle_lt_or_eq : forall x y : Q, Qle x y -> Qlt x y \/ Qeq x y.
+Lemma Qle_lt_or_eq : forall x y, x<=y -> x<y \/ x==y.
 Proof.
 unfold Qle, Qlt, Qeq in |- *; intros; apply Zle_lt_or_eq; auto.
 Qed.
 
 (** Some decidability results about orders. *)
 
-Lemma Q_dec : forall x y : Q, {Qlt x y} + {Qlt y x} + {Qeq x y}.
+Lemma Q_dec : forall x y, {x<y} + {y<x} + {x==y}.
 Proof.
 unfold Qlt, Qle, Qeq in |- *; intros.
 exact (Z_dec' (Qnum x * Zpos (Qden y)) (Qnum y * Zpos (Qden x))).
 Defined.
 
-Lemma Qlt_le_dec : forall x y : Q, {Qlt x y} + {Qle y x}.
+Lemma Qlt_le_dec : forall x y, {x<y} + {y<=x}.
 Proof.
 unfold Qlt, Qle in |- *; intros.
 exact (Z_lt_le_dec (Qnum x * QDen y) (Qnum y * QDen x)).
@@ -440,7 +449,7 @@ Defined.
 (** Compatibility of operations with respect to order. *)
 
 Lemma Qle_plus_compat :
- forall x y z t : Q, Qle x y -> Qle z t -> Qle (Qplus x z) (Qplus y t).
+ forall x y z t, x<=y -> z<=t -> x+z <= y+t.
 Proof.
 unfold Qplus, Qle in |- *; intros (x1, x2) (y1, y2) (z1, z2) (t1, t2);
  simpl in |- *; Kill_times.
@@ -463,3 +472,29 @@ apply Zmult_le_compat_r; auto with zarith.
 ring.
 ring.
 Qed.
+
+Lemma Qle_mult_compat : forall x y z, 0#1 <  z  -> x <= y -> x*z <= y*z.
+intros (a1,a2) (b1,b2) (c1,c2); unfold Qle, Qlt; simpl.
+replace (Zpos (b2*c2)) with (Zpos b2*Zpos c2)%Z; auto with zarith.
+replace (Zpos (a2*c2)) with (Zpos a2*Zpos c2)%Z; auto with zarith.
+replace (a1*c1*(Zpos b2*Zpos c2))%Z with ((a1*Zpos b2)*(c1*Zpos c2))%Z.
+replace (b1*c1*(Zpos a2*Zpos c2))%Z with ((b1*Zpos a2)*(c1*Zpos c2))%Z.
+intros; apply Zmult_le_compat_r; auto with zarith.
+ring.
+ring.
+Qed.
+
+Lemma Qle_mult_compat2 : forall x y z, 0#1 <  z  -> x*z <= y*z -> x <= y.
+intros (a1,a2) (b1,b2) (c1,c2); unfold Qle, Qlt; simpl.
+replace (Zpos (b2*c2)) with (Zpos b2*Zpos c2)%Z; auto with zarith.
+replace (Zpos (a2*c2)) with (Zpos a2*Zpos c2)%Z; auto with zarith.
+replace (a1*c1*(Zpos b2*Zpos c2))%Z with ((a1*Zpos b2)*(c1*Zpos c2))%Z.
+replace (b1*c1*(Zpos a2*Zpos c2))%Z with ((b1*Zpos a2)*(c1*Zpos c2))%Z.
+intros; apply Zmult_le_reg_r with (c1*Zpos c2)%Z; auto with zarith.
+ring.
+ring.
+Qed.
+
+
+
+
