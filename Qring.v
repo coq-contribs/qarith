@@ -36,35 +36,35 @@ Add Setoid Ring Q Qeq Q_Setoid Qplus Qmult Qone Qzero Qopp Qeq_bool
 
 (* Exemple of use: *)
 
-Goal
-forall x y z : Q, (x+y)*z ==  (x*z)+(y*z).
+Lemma Qring_example1 : 
+ forall x y z : Q, (x+y)*z ==  (x*z)+(y*z).
 intros.
 ring.
-Abort.
+Qed.
 
-Goal forall x y : Q, x+y == y+x.
+Lemma Qring_example2 : forall x y : Q, x+y == y+x.
 intros. 
 ring.
-Abort.
+Qed.
 
-Goal forall x y z : Q, (x+y)+z == x+(y+z).
+Lemma Qring_example3 : forall x y z : Q, (x+y)+z == x+(y+z).
 intros.
 ring.
-Abort.
+Qed.
 
-Goal (inject_Z 1)+(inject_Z 1)==(inject_Z 2).
+Lemma Qring_example4 : (inject_Z 1)+(inject_Z 1)==(inject_Z 2).
 ring.
-Abort.
+Qed.
 
-Goal  Qone+Qone ==2#1.
+Lemma Qring_example5 : Qone+Qone ==2#1.
 ring.
-Abort.
+Qed.
 
-Goal 1#1+1#1 == 2#1.
+Lemma Qring_example6 : 1#1+1#1 == 2#1.
 ring.
-Abort.
+Qed.
 
-Goal forall x : Q, x-x== 0#1.
+Lemma Qring_example7 : forall x : Q, x-x== 0#1.
 intro.
 ring.
-Abort.
+Qed.
