@@ -75,9 +75,7 @@ VFILES=QArith_base.v\
   Qreals.v\
   Qreduction.v\
   Qring.v\
-  QArith.v\
-  nat_log.v\
-  Reals.v
+  QArith.v
 VOFILES=$(VFILES:.v=.vo)
 VIFILES=$(VFILES:.v=.vi)
 GFILES=$(VFILES:.v=.g)
@@ -88,10 +86,7 @@ all: QArith_base.vo\
   Qreals.vo\
   Qreduction.vo\
   Qring.vo\
-  QArith.vo\
-  nat_log.vo\
-  Reals.vo\
-  sqrt2
+  QArith.vo
 
 spec: $(VIFILES)
 
@@ -108,15 +103,6 @@ all-gal.ps: $(VFILES)
 	$(COQDOC) -ps -g -o $@ `$(COQDEP) -sort -suffix .v $(VFILES)`
 
 
-
-###################
-#                 #
-# Custom targets. #
-#                 #
-###################
-
-sqrt2: Reals.vo sqrt2_main.ml
-	ocamlopt -o sqrt2 nums.cmxa sqrt2.mli sqrt2.ml sqrt2_main.ml
 
 ####################
 #                  #
