@@ -1,0 +1,6 @@
+QArith_base.v
+Qreals.v
+Qreduction.v
+Qring.v
+# Qsyntax.v ## To be retried after Coq 8.0 release... 
+QArith.v

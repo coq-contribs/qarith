@@ -1,0 +1,18 @@
+QArith_base.vo: QArith_base.v
+QArith_base.vi: QArith_base.v
+QArith.vo: QArith.v ./QArith_base.vo ./Qring.vo ./Qreduction.vo
+QArith.vi: QArith.v ./QArith_base.vo ./Qring.vo ./Qreduction.vo
+Qreals.vo: Qreals.v ./QArith_base.vo
+Qreals.vi: Qreals.v ./QArith_base.vo
+Qreduction.vo: Qreduction.v ./QArith_base.vo
+Qreduction.vi: Qreduction.v ./QArith_base.vo
+Qring.vo: Qring.v ./QArith_base.vo
+Qring.vi: Qring.v ./QArith_base.vo
+Qsyntax.vo: Qsyntax.v ./QArith_base.vo
+Qsyntax.vi: Qsyntax.v ./QArith_base.vo
+QArith_base.html: QArith_base.v
+QArith.html: QArith.v ./QArith_base.html ./Qring.html ./Qreduction.html
+Qreals.html: Qreals.v ./QArith_base.html
+Qreduction.html: Qreduction.v ./QArith_base.html
+Qring.html: Qring.v ./QArith_base.html
+Qsyntax.html: Qsyntax.v ./QArith_base.html
