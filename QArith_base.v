@@ -77,7 +77,7 @@ Proof.
  split; unfold Qeq in |- *; auto; apply Qeq_trans.
 Qed.
 
-Add Setoid Q Qeq Q_Setoid.
+Add Setoid Q Qeq Q_Setoid as Qsetoid.
 
 Hint Resolve (Seq_refl Q Qeq Q_Setoid): qarith.
 Hint Resolve (Seq_sym Q Qeq Q_Setoid): qarith.
