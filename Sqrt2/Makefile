@@ -62,8 +62,10 @@ PP=-pp "camlp4o -I . -I $(COQTOP)/parsing $(CAMLP4EXTEND) $(GRAMMARS) -impl"
 #                       #
 #########################
 
-OCAMLLIBS=-I .
-COQLIBS=-I .
+OCAMLLIBS=-I .\
+  -I ..
+COQLIBS=-I .\
+  -I ..
 
 ###################################
 #                                 #
@@ -71,23 +73,17 @@ COQLIBS=-I .
 #                                 #
 ###################################
 
-VFILES=QArith_base.v\
-  Qreals.v\
-  Qreduction.v\
-  Qring.v\
-  QArith.v
+VFILES=nat_log.v\
+  Reals.v
 VOFILES=$(VFILES:.v=.vo)
 VIFILES=$(VFILES:.v=.vi)
 GFILES=$(VFILES:.v=.g)
 HTMLFILES=$(VFILES:.v=.html)
 GHTMLFILES=$(VFILES:.v=.g.html)
 
-all: QArith_base.vo\
-  Qreals.vo\
-  Qreduction.vo\
-  Qring.vo\
-  QArith.vo\
-  Sqrt2
+all: nat_log.vo\
+  Reals.vo\
+  sqrt2
 
 spec: $(VIFILES)
 
@@ -107,12 +103,12 @@ all-gal.ps: $(VFILES)
 
 ###################
 #                 #
-# Subdirectories. #
+# Custom targets. #
 #                 #
 ###################
 
-Sqrt2:
-	cd Sqrt2 ; $(MAKE) all
+sqrt2: Reals.vo sqrt2_main.ml
+	ocamlopt -o sqrt2 nums.cmxa sqrt2.mli sqrt2.ml sqrt2_main.ml
 
 ####################
 #                  #
@@ -120,7 +116,7 @@ Sqrt2:
 #                  #
 ####################
 
-.PHONY: all opt byte archclean clean install depend html Sqrt2
+.PHONY: all opt byte archclean clean install depend html
 
 .SUFFIXES: .v .vo .vi .g .html .tex .g.tex .g.html
 
@@ -157,30 +153,24 @@ include .depend
 	rm -f .depend
 	$(COQDEP) -i $(COQLIBS) $(VFILES) *.ml *.mli >.depend
 	$(COQDEP) $(COQLIBS) -suffix .html $(VFILES) >>.depend
-	(cd Sqrt2 ; $(MAKE) depend)
 
 install:
 	mkdir -p `$(COQC) -where`/user-contrib
 	cp -f $(VOFILES) `$(COQC) -where`/user-contrib
-	(cd Sqrt2 ; $(MAKE) install)
 
 Makefile: Make
 	mv -f Makefile Makefile.bak
 	$(COQBIN)coq_makefile -f Make -o Makefile
 
-	(cd Sqrt2 ; $(MAKE) Makefile)
 
 clean:
 	rm -f *.cmo *.cmi *.cmx *.o $(VOFILES) $(VIFILES) $(GFILES) *~
 	rm -f all.ps all-gal.ps $(HTMLFILES) $(GHTMLFILES)
-	(cd Sqrt2 ; $(MAKE) clean)
 
 archclean:
 	rm -f *.cmx *.o
-	(cd Sqrt2 ; $(MAKE) archclean)
 
 html:
-	(cd Sqrt2 ; $(MAKE) html)
 
 # WARNING
 #
