@@ -3,7 +3,7 @@ Require Import Ring.
 Require Export Setoid_ring.
 
 Definition Qeq_bool (x y : Q) :=
-  if Qeq_dec x y then fun _ => true else fun _ => false.
+  if Qeq_dec x y then true else false.
 
 Lemma Qeq_bool_correct : forall x y : Q, Qeq_bool x y = true -> Qeq x y.
 intros x y; unfold Qeq_bool in |- *; case (Qeq_dec x y); simpl in |- *; auto.
