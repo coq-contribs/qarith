@@ -2,5 +2,7 @@ QArith_base.v
 Qreals.v
 Qreduction.v
 Qring.v
-# Qsyntax.v ## To be retried after Coq 8.0 release... 
 QArith.v
+nat_log.v
+Reals.v
+-custom "ocamlopt -o sqrt2 nums.cmxa sqrt2.mli sqrt2.ml sqrt2_main.ml" "Reals.vo sqrt2_main.ml" sqrt2

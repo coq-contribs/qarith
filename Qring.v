@@ -1,14 +1,17 @@
-Require Export QArith_base.
 Require Import Ring.
 Require Export Setoid_ring.
+Require Export QArith_base.
 
 Definition Qeq_bool (x y : Q) :=
   if Qeq_dec x y then true else false.
 
-Lemma Qeq_bool_correct : forall x y : Q, Qeq_bool x y = true -> Qeq x y.
+Lemma Qeq_bool_correct : forall x y : Q, Qeq_bool x y = true -> x==y.
 intros x y; unfold Qeq_bool in |- *; case (Qeq_dec x y); simpl in |- *; auto.
 intros _ H; inversion H.
 Qed.
+
+Definition Qone := 1#1.
+Definition Qzero := 0#1.
 
 Definition Qsrt : Setoid_Ring_Theory Qeq Qplus Qmult Qone Qzero Qopp Qeq_bool.
 Proof.
@@ -34,30 +37,34 @@ Add Setoid Ring Q Qeq Q_Setoid Qplus Qmult Qone Qzero Qopp Qeq_bool
 (* Exemple of use: *)
 
 Goal
-forall x y z : Q, Qeq (Qmult (Qplus x y) z) (Qplus (Qmult x z) (Qmult y z)).
+forall x y z : Q, (x+y)*z ==  (x*z)+(y*z).
 intros.
 ring.
 Abort.
 
-Goal forall x y : Q, Qeq (Qplus x y) (Qplus y x).
+Goal forall x y : Q, x+y == y+x.
 intros. 
 ring.
 Abort.
 
-Goal forall x y z : Q, Qeq (Qplus (Qplus x y) z) (Qplus x (Qplus y z)).
+Goal forall x y z : Q, (x+y)+z == x+(y+z).
 intros.
 ring.
 Abort.
 
-Goal Qeq (Qplus (inject_Z 1) (inject_Z 1)) (inject_Z 2).
+Goal (inject_Z 1)+(inject_Z 1)==(inject_Z 2).
 ring.
 Abort.
 
-Goal Qeq (Qplus Qone Qone) (Qmake 2 1).
+Goal  Qone+Qone ==2#1.
 ring.
 Abort.
 
-Goal forall x : Q, Qeq (Qminus x x) Qzero.
+Goal 1#1+1#1 == 2#1.
+ring.
+Abort.
+
+Goal forall x : Q, x-x== 0#1.
 intro.
 ring.
 Abort.
