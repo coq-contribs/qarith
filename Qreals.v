@@ -1,5 +1,5 @@
-Require Export QArith_base.
 Require Export Rbase.
+Require Export QArith_base.
 
 Lemma IZR_nz : forall p : positive, IZR (Zpos p) <> 0%R.
 intros; apply not_O_IZR; auto with qarith.
@@ -10,7 +10,7 @@ Hint Resolve Rmult_integral_contrapositive.
 
 Definition Q2R (x : Q) : R := (IZR (Qnum x) * / IZR (QDen x))%R.
 
-Lemma eqR_Qeq : forall x y : Q, Q2R x = Q2R y -> Qeq x y.
+Lemma eqR_Qeq : forall x y : Q, Q2R x = Q2R y -> x==y.
 unfold Qeq, Q2R in |- *; intros (x1, x2) (y1, y2); unfold Qnum, Qden in |- *;
  intros.
 apply eq_IZR.
@@ -24,7 +24,7 @@ rewrite <- H; field; auto.
 rewrite Rinv_r_simpl_m in H0; auto; rewrite H0; field; auto.
 Qed.
 
-Lemma Qeq_eqR : forall x y : Q, Qeq x y -> Q2R x = Q2R y.
+Lemma Qeq_eqR : forall x y : Q, x==y -> Q2R x = Q2R y.
 unfold Qeq, Q2R in |- *; intros (x1, x2) (y1, y2); unfold Qnum, Qden in |- *;
  intros.
 set (X1 := IZR x1) in *; assert (X2nz := IZR_nz x2);
@@ -39,7 +39,7 @@ field; auto.
 rewrite <- H0; field; auto.
 Qed.
 
-Lemma Rle_Qle : forall x y : Q, (Q2R x <= Q2R y)%R -> Qle x y.
+Lemma Rle_Qle : forall x y : Q, (Q2R x <= Q2R y)%R -> x<=y.
 unfold Qle, Q2R in |- *; intros (x1, x2) (y1, y2); unfold Qnum, Qden in |- *;
  intros.
 apply le_IZR.
@@ -58,7 +58,7 @@ unfold Y2 in |- *; replace 0%R with (IZR 0); auto; apply IZR_le;
  auto with zarith.
 Qed.
 
-Lemma Qle_Rle : forall x y : Q, Qle x y -> (Q2R x <= Q2R y)%R.
+Lemma Qle_Rle : forall x y : Q, x<=y -> (Q2R x <= Q2R y)%R.
 unfold Qle, Q2R in |- *; intros (x1, x2) (y1, y2); unfold Qnum, Qden in |- *;
  intros.
 set (X1 := IZR x1) in *; assert (X2nz := IZR_nz x2);
@@ -79,7 +79,7 @@ unfold Y2 in |- *; replace 0%R with (IZR 0); auto; apply IZR_lt; red in |- *;
  auto with zarith.
 Qed.
 
-Lemma Rlt_Qlt : forall x y : Q, (Q2R x < Q2R y)%R -> Qlt x y.
+Lemma Rlt_Qlt : forall x y : Q, (Q2R x < Q2R y)%R -> x<y.
 unfold Qlt, Q2R in |- *; intros (x1, x2) (y1, y2); unfold Qnum, Qden in |- *;
  intros.
 apply lt_IZR.
@@ -98,7 +98,7 @@ unfold Y2 in |- *; replace 0%R with (IZR 0); auto; apply IZR_lt; red in |- *;
  auto with zarith.
 Qed.
 
-Lemma Qlt_Rlt : forall x y : Q, Qlt x y -> (Q2R x < Q2R y)%R.
+Lemma Qlt_Rlt : forall x y : Q, x<y -> (Q2R x < Q2R y)%R.
 unfold Qlt, Q2R in |- *; intros (x1, x2) (y1, y2); unfold Qnum, Qden in |- *;
  intros.
 set (X1 := IZR x1) in *; assert (X2nz := IZR_nz x2);
@@ -119,7 +119,7 @@ unfold Y2 in |- *; replace 0%R with (IZR 0); auto; apply IZR_lt; red in |- *;
  auto with zarith.
 Qed.
 
-Lemma Q2R_plus : forall x y : Q, Q2R (Qplus x y) = (Q2R x + Q2R y)%R.
+Lemma Q2R_plus : forall x y : Q, Q2R (x+y) = (Q2R x + Q2R y)%R.
 unfold Qplus, Qeq, Q2R in |- *; intros (x1, x2) (y1, y2);
  unfold Qden, Qnum in |- *.
 Kill_times.
@@ -128,7 +128,7 @@ do 3 rewrite mult_IZR.
 field; auto.
 Qed.
 
-Lemma Q2R_mult : forall x y : Q, Q2R (Qmult x y) = (Q2R x * Q2R y)%R.
+Lemma Q2R_mult : forall x y : Q, Q2R (x*y) = (Q2R x * Q2R y)%R.
 unfold Qmult, Qeq, Q2R in |- *; intros (x1, x2) (y1, y2);
  unfold Qden, Qnum in |- *.
 Kill_times.
@@ -136,17 +136,17 @@ do 2 rewrite mult_IZR.
 field; auto.
 Qed.
 
-Lemma Q2R_opp : forall x : Q, Q2R (Qopp x) = (- Q2R x)%R.
+Lemma Q2R_opp : forall x : Q, Q2R (- x) = (- Q2R x)%R.
 unfold Qopp, Qeq, Q2R in |- *; intros (x1, x2); unfold Qden, Qnum in |- *.
 rewrite Ropp_Ropp_IZR.
 field; auto.
 Qed.
 
-Lemma Q2R_minus : forall x y : Q, Q2R (Qminus x y) = (Q2R x - Q2R y)%R.
+Lemma Q2R_minus : forall x y : Q, Q2R (x-y) = (Q2R x - Q2R y)%R.
 unfold Qminus in |- *; intros; rewrite Q2R_plus; rewrite Q2R_opp; auto.
 Qed.
 
-Lemma Q2R_inv : forall x : Q, ~ Qeq x Qzero -> Q2R (Qinv x) = (/ Q2R x)%R.
+Lemma Q2R_inv : forall x : Q, ~ x==0#1 -> Q2R (/x) = (/ Q2R x)%R.
 unfold Qinv, Q2R, Qeq in |- *; intros (x1, x2); unfold Qden, Qnum in |- *.
 case x1.
 simpl in |- *; intros; elim H; trivial.
@@ -164,7 +164,7 @@ apply Rinv_neq_0_compat; auto.
 Qed.
 
 Lemma Q2R_div :
- forall x y : Q, ~ Qeq y Qzero -> Q2R (Qdiv x y) = (Q2R x / Q2R y)%R.
+ forall x y : Q, ~ y==0#1 -> Q2R (x/y) = (Q2R x / Q2R y)%R.
 unfold Qdiv, Rdiv in |- *.
 intros; rewrite Q2R_mult.
 rewrite Q2R_inv; auto.
@@ -177,11 +177,11 @@ Ltac QField := apply eqR_Qeq; autorewrite with q2r_simpl; try field; auto.
 (* Examples of use: *)
 
 Goal
-forall x y z : Q, Qeq (Qmult (Qplus x y) z) (Qplus (Qmult x z) (Qmult y z)).
+forall x y z : Q, (x+y)*z == (x*z)+(y*z).
 intros; QField.
 Abort.
 
-Goal forall x y : Q, ~ Qeq y Qzero -> Qeq (Qmult (Qdiv x y) y) x.
+Goal forall x y : Q, ~ y==0#1 -> (x/y)*y == x.
 intros; QField.
 intro; apply H; apply eqR_Qeq.
 rewrite H0; unfold Q2R in |- *; simpl in |- *; field; auto with real.

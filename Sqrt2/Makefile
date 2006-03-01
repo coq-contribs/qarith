@@ -62,8 +62,10 @@ PP=-pp "camlp4o -I . -I $(COQTOP)/parsing $(CAMLP4EXTEND) $(GRAMMARS) -impl"
 #                       #
 #########################
 
-OCAMLLIBS=-I .
-COQLIBS=-I .
+OCAMLLIBS=-I .\
+  -I ..
+COQLIBS=-I .\
+  -I ..
 
 ###################################
 #                                 #
@@ -71,22 +73,17 @@ COQLIBS=-I .
 #                                 #
 ###################################
 
-VFILES=QArith_base.v\
-  Qreals.v\
-  Qreduction.v\
-  Qring.v\
-  QArith.v
+VFILES=nat_log.v\
+  Reals.v
 VOFILES=$(VFILES:.v=.vo)
 VIFILES=$(VFILES:.v=.vi)
 GFILES=$(VFILES:.v=.g)
 HTMLFILES=$(VFILES:.v=.html)
 GHTMLFILES=$(VFILES:.v=.g.html)
 
-all: QArith_base.vo\
-  Qreals.vo\
-  Qreduction.vo\
-  Qring.vo\
-  QArith.vo
+all: nat_log.vo\
+  Reals.vo\
+  sqrt2
 
 spec: $(VIFILES)
 
@@ -103,6 +100,15 @@ all-gal.ps: $(VFILES)
 	$(COQDOC) -ps -g -o $@ `$(COQDEP) -sort -suffix .v $(VFILES)`
 
 
+
+###################
+#                 #
+# Custom targets. #
+#                 #
+###################
+
+sqrt2: Reals.vo sqrt2_main.ml
+	ocamlopt -o sqrt2 nums.cmxa sqrt2.mli sqrt2.ml sqrt2_main.ml
 
 ####################
 #                  #
@@ -145,12 +151,12 @@ include .depend
 
 .depend depend:
 	rm -f .depend
-	$(COQDEP) -i $(COQLIBS) *.v *.ml *.mli >.depend
-	$(COQDEP) $(COQLIBS) -suffix .html *.v >>.depend
+	$(COQDEP) -i $(COQLIBS) $(VFILES) *.ml *.mli >.depend
+	$(COQDEP) $(COQLIBS) -suffix .html $(VFILES) >>.depend
 
 install:
 	mkdir -p `$(COQC) -where`/user-contrib
-	cp -f *.vo `$(COQC) -where`/user-contrib
+	cp -f $(VOFILES) `$(COQC) -where`/user-contrib
 
 Makefile: Make
 	mv -f Makefile Makefile.bak
@@ -158,7 +164,7 @@ Makefile: Make
 
 
 clean:
-	rm -f *.cmo *.cmi *.cmx *.o *.vo *.vi *.g *~
+	rm -f *.cmo *.cmi *.cmx *.o $(VOFILES) $(VIFILES) $(GFILES) *~
 	rm -f all.ps all-gal.ps $(HTMLFILES) $(GHTMLFILES)
 
 archclean:

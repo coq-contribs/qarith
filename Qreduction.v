@@ -24,9 +24,9 @@ Qed.
 
 Definition Qred (q : Q) :=
   let (q1, q2) := q in
-  let g := Zgcd (Zpos q2) q1 in Qmake (q1 / g) (Z2P (Zpos q2 / g)).
+  let g := Zgcd (Zpos q2) q1 in (q1 / g)#(Z2P (Zpos q2 / g)).
 
-Lemma Qred_correct : forall q : Q, Qeq (Qred q) q.
+Lemma Qred_correct : forall q, (Qred q) == q.
 intros (n, d); unfold Qred, Qeq in |- *; simpl in |- *.
 unfold Zgcd in |- *; case (Zgcd_spec (Zpos d) n); intros g.
 intuition.
@@ -52,7 +52,7 @@ rewrite (Z_div_exact_2 (Zpos d) g); try apply Zdivide_mod; auto with zarith.
 ring.
 Qed.
 
-Lemma Qred_complete : forall p q : Q, Qeq p q -> Qred p = Qred q.
+Lemma Qred_complete : forall p q,  p==q -> Qred p = Qred q.
 intros (a, b) (c, d); unfold Qeq in |- *; simpl in |- *.
 unfold Zgcd in |- *; case (Zgcd_spec (Zpos b) a); intros g (Hg1, Hg2).
 unfold Zgcd in |- *; case (Zgcd_spec (Zpos d) c); intros g' (Hg'1, Hg'2).

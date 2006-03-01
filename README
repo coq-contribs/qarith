@@ -1,5 +1,7 @@
           A Library for Rational Numbers (QArith)
 
+                       P. Letouzey
+
 This contribution is a proposition for what could become a QArith 
 Standard Library. The need for such a QArith Standard Library seems
 clear from the number of users contribution dealing with Rationals.
@@ -48,8 +50,13 @@ Qreals.v: Unlike Ring, the Field tactic does currently not work over
 
 Qreduction.v: Transforming a fraction into its reduced form. 
 
-Qsyntax.v: An attempt of pretty syntax. Will probably not work correctly 
- until coq V8 new syntax.
+SQRT2: 
+
+In this subdirectory can be found a small experiment about constructive 
+reals made with the help of H. Schwichtenberg. Even if this experiment 
+is not in a finished state, I've included it along with QArith as a 
+example of use for these rationals and as a test-suite. 
+
 
 
 
