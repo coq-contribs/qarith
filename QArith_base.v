@@ -36,7 +36,7 @@ Bind Scope Q_scope with Q.
 Arguments Scope Qmake [Z_scope positive_scope].
 Open Scope Q_scope.
 
-Notation "a # b" := (Qmake a b) (at level 20, no associativity) : Q_scope.
+Notation "a # b" := (Qmake a b) (at level 55, no associativity) : Q_scope.
 
 Definition inject_Z (x : Z) := Qmake x 1. 
 
@@ -310,7 +310,7 @@ Qed.
 
 (* Qone is a neutral element for multiplication: *)
 
-Theorem Qmult_n_1 : forall n, n*(1#1)==n.
+Theorem Qmult_n_1 : forall n, n*1==n.
 Proof.
  intro; red; simpl.
  rewrite Zmult_1_r with (n := Qnum n).
@@ -490,7 +490,7 @@ apply Zmult_le_compat_r; auto with zarith.
 Open Scope Q_scope.
 Qed.
 
-Lemma Qle_mult_compat : forall x y z, 0 <  z  -> x <= y -> x*z <= y*z.
+Lemma Qle_mult_compat : forall x y z, 0 <=  z  -> x <= y -> x*z <= y*z.
 Proof.
 intros (a1,a2) (b1,b2) (c1,c2); unfold Qle, Qlt; simpl.
 Open Scope Z_scope.
@@ -511,3 +511,5 @@ replace (b1*c1*('a2*'c2)) with ((b1*'a2)*(c1*'c2)) by ring.
 intros; apply Zmult_le_reg_r with (c1*'c2); auto with zarith.
 Open Scope Q_scope.
 Qed.
+
+

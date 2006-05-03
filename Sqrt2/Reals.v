@@ -196,9 +196,10 @@ Definition Rcompare : forall x y, Rlt x y -> forall z, Rlt x z + Rlt z y.
 unfold Rlt; intros.
 generalize (Rpos_alt_1 _ H); clear H; intros H.
 elim H; intros k Hk; elim Hk; intros p Hp; clear H Hk.
-set (k' := (S (S (S k)))).
-set (q := (max (modulus x k') (max (modulus y k') (max (modulus z k') p)))).
-elim (Qlt_le_dec ((cauchy z q - cauchy y q)*!2^k') 3%Z); intros.
+set (k' := S (S k)).
+set (k'' := S (S k)).
+set (q := (max (modulus x k'') (max (modulus y k'') (max (modulus z k'') p)))).
+elim (Qlt_le_dec ((cauchy z q - cauchy x q)*!2^k') 2); intros.
 right.
 exists k'.
 fedup.

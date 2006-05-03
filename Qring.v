@@ -26,10 +26,7 @@ intros x y; unfold Qeq_bool in |- *; case (Qeq_dec x y); simpl in |- *; auto.
 intros _ H; inversion H.
 Qed.
 
-Definition Qone := 1#1.
-Definition Qzero := 0#1.
-
-Definition Qsrt : Setoid_Ring_Theory Qeq Qplus Qmult Qone Qzero Qopp Qeq_bool.
+Definition Qsrt : Setoid_Ring_Theory Qeq Qplus Qmult 1 0 Qopp Qeq_bool.
 Proof.
 constructor.
 exact Qplus_sym.
@@ -46,7 +43,7 @@ unfold Is_true; intros x y; generalize (Qeq_bool_correct x y);
  case (Qeq_bool x y); auto.
 Qed.
 
-Add Setoid Ring Q Qeq Q_Setoid Qplus Qmult Qone Qzero Qopp Qeq_bool
+Add Setoid Ring Q Qeq Q_Setoid Qplus Qmult 1 0 Qopp Qeq_bool
  Qplus_comp Qmult_comp Qopp_comp Qsrt
  [ Qmake (*inject_Z*)  Zpos 0%Z Zneg xI xO 1%positive ].
 
@@ -73,11 +70,11 @@ Let ex4 : (inject_Z 1)+(inject_Z 1)==(inject_Z 2).
 ring.
 Qed.
 
-Let ex5 : Qone+Qone ==2#1.
+Let ex5 : 1+1 == 2#1.
 ring.
 Qed.
 
-Let ex6 : 1#1+1#1 == 2#1.
+Let ex6 : (1#1)+(1#1) == 2#1.
 ring.
 Qed.
 
