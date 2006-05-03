@@ -138,7 +138,7 @@ Qed.
 Lemma Q2R_plus : forall x y : Q, Q2R (x+y) = (Q2R x + Q2R y)%R.
 unfold Qplus, Qeq, Q2R in |- *; intros (x1, x2) (y1, y2);
  unfold Qden, Qnum in |- *.
-Kill_times.
+kill_times.
 rewrite plus_IZR.
 do 3 rewrite mult_IZR.
 field; auto.
@@ -147,7 +147,7 @@ Qed.
 Lemma Q2R_mult : forall x y : Q, Q2R (x*y) = (Q2R x * Q2R y)%R.
 unfold Qmult, Qeq, Q2R in |- *; intros (x1, x2) (y1, y2);
  unfold Qden, Qnum in |- *.
-Kill_times.
+kill_times.
 do 2 rewrite mult_IZR.
 field; auto.
 Qed.

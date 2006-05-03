@@ -43,6 +43,7 @@ Definition Qred (q : Q) :=
   let g := Zgcd (Zpos q2) q1 in (q1 / g)#(Z2P (Zpos q2 / g)).
 
 Lemma Qred_correct : forall q, (Qred q) == q.
+Proof.
 intros (n, d); unfold Qred, Qeq in |- *; simpl in |- *.
 unfold Zgcd in |- *; case (Zgcd_spec (Zpos d) n); intros g.
 intuition.
@@ -69,6 +70,7 @@ ring.
 Qed.
 
 Lemma Qred_complete : forall p q,  p==q -> Qred p = Qred q.
+Proof.
 intros (a, b) (c, d); unfold Qeq in |- *; simpl in |- *.
 unfold Zgcd in |- *; case (Zgcd_spec (Zpos b) a); intros g (Hg1, Hg2).
 unfold Zgcd in |- *; case (Zgcd_spec (Zpos d) c); intros g' (Hg'1, Hg'2).
@@ -112,28 +114,32 @@ ring.
 Qed.
 
 Add Morphism Qred : Qred_comp. 
+Proof.
 intros q q' H.
-setoid_rewrite (Qred_correct q); auto.
-setoid_rewrite (Qred_correct q'); auto.
+rewrite (Qred_correct q); auto.
+rewrite (Qred_correct q'); auto.
 Qed.
 
 Definition Qplus' (p q : Q) := Qred (Qplus p q).
 Definition Qmult' (p q : Q) := Qred (Qmult p q). 
 
-Definition Qplus'_correct : forall p q : Q, Qeq (Qplus' p q) (Qplus p q).
+Lemma Qplus'_correct : forall p q : Q, Qeq (Qplus' p q) (Qplus p q).
+Proof.
 intros; unfold Qplus' in |- *; apply Qred_correct; auto.
 Qed.
 
-Definition Qmult'_correct : forall p q : Q, Qeq (Qmult' p q) (Qmult p q).
+Lemma Qmult'_correct : forall p q : Q, Qeq (Qmult' p q) (Qmult p q).
+Proof.
 intros; unfold Qmult' in |- *; apply Qred_correct; auto.
 Qed.
 
 Add Morphism Qplus' : Qplus'_comp.
+Proof.
 intros; unfold Qplus' in |- *.
-setoid_rewrite H; setoid_rewrite H0; auto with qarith.
+rewrite H; rewrite H0; auto with qarith.
 Qed.
 
 Add Morphism Qmult' : Qmult'_comp.
 intros; unfold Qmult' in |- *.
-setoid_rewrite H; setoid_rewrite H0; auto with qarith.
+rewrite H; rewrite H0; auto with qarith.
 Qed.

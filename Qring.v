@@ -36,13 +36,13 @@ exact Qplus_sym.
 exact Qplus_assoc.
 exact Qmult_sym.
 exact Qmult_assoc.
-intro; setoid_rewrite (Qplus_sym Qzero n); apply Qzero_right.
-intro; setoid_rewrite (Qmult_sym Qone n); apply Qmult_n_1.
+intro; rewrite Qplus_sym; apply Qzero_right.
+intro; rewrite Qmult_sym; apply Qmult_n_1.
 exact Qplus_inverse_r.
-intros; setoid_rewrite (Qmult_sym (Qplus n m) p);
- setoid_rewrite (Qmult_sym n p); setoid_rewrite (Qmult_sym m p);
+intros; rewrite Qmult_sym;
+ rewrite (Qmult_sym n p); rewrite (Qmult_sym m p);
  apply Qmult_plus_distr_r; auto.
-unfold Is_true in |- *; intros x y; generalize (Qeq_bool_correct x y);
+unfold Is_true; intros x y; generalize (Qeq_bool_correct x y);
  case (Qeq_bool x y); auto.
 Qed.
 

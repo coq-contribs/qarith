@@ -30,7 +30,7 @@ Coercion inject_Z : Z >-> Q.
 
 Definition Is_Cauchy (f : nat -> Q) (mo : nat -> nat) :=
   forall k m n,  (mo k <= m)%nat -> (mo k <= n)%nat ->
-  let e:=(f m - f n)*!2^k in  -1#1 <= e <= 1#1.
+  let e:=(f m - f n)*!2^k in  -1 <= e <= 1.
 
 (* A real is given by a cauchy sequence, a modulus sequence *)
 (* and a proof of the Cauchy property of these sequences. *)
@@ -46,7 +46,7 @@ Record R : Set := {
 
 Definition inject_Q : Q -> R.
 intros q.
-apply (Build_R (fun _ => q) (fun _ => 0)).
+apply (Build_R (fun _ => q) (fun _ => O)).
 red; intros.
 assert ((q-q)*!2^k==0#1).
 ring.
@@ -63,19 +63,19 @@ Definition Req : R -> R -> Prop:=
       forall k, let M := modulus x (S k) in 
             let N := modulus y (S k) in 
             let e := (cauchy x M - cauchy y N)*!2^k in 
-            -1#1 <= e <= 1#1.         
+            -1 <= e <= 1.         
 
 (* The informative positivity upon R. *)
 
 Definition Rpos_k : nat -> R -> Prop :=
-  fun k x => -1#1 <= (cauchy x (modulus x (S k)))*!2^k.
+  fun k x => -1 <= (cauchy x (modulus x (S k)))*!2^k.
 
 Definition Rpos : R -> Set := fun x => { k:nat | Rpos_k k x }.
 
 (* The logical non-negativity upon R. *)
 
 Definition Rnonneg : R -> Prop := 
- fun x => forall k:nat, -1#1 <= (cauchy x (modulus x k))*!2^k.
+ fun x => forall k:nat, -1 <= (cauchy x (modulus x k))*!2^k.
 
 (* The Dirty Part: *)
 
@@ -133,13 +133,13 @@ split.
 
 apply Qle_mult_compat2 with 2%Z.
 unfold Qlt; simpl; omega.
-replace (-1#1 * 2%Z) with (-1#1 + -1#1); simpl; auto.
+replace (-1 * 2%Z) with (-1 + -1); simpl; auto.
 setoid_rewrite H3.
 apply Qle_plus_compat; auto.
 
 apply Qle_mult_compat2 with 2%Z.
 unfold Qlt; simpl; omega.
-replace (1#1 * 2%Z) with (1#1+1#1); simpl; auto.
+replace (1 * 2%Z) with (1+1); simpl; auto.
 setoid_rewrite H3.
 apply Qle_plus_compat; auto.
 Defined.
@@ -169,7 +169,7 @@ Definition Rle : R -> R -> Prop := fun x y => Rnonneg (Rminus y x).
 (* An alternative characterization of positivity upon R. *)
 
 Definition Rpos_alt (x:R) := 
- {l:nat & { p:nat | forall n, le p n -> 1#1 <= (cauchy x n)*!2^l}}.
+ {l:nat & { p:nat | forall n, le p n -> 1 <= (cauchy x n)*!2^l}}.
 
 Lemma Rpos_alt_1 : forall x:R, Rpos x -> Rpos_alt x.
 unfold Rpos, Rpos_k, Rpos_alt.
@@ -209,7 +209,7 @@ Defined.
 
 (* Specialized continuity components for sqr2 = X^2-2 *)
 
-Definition sqr2 := fun a => (a * a)+(-2)#1.
+Definition sqr2 := fun a => (a * a)+(-2).
 Definition sqr2_h := fun a (_:nat) => sqr2 a.
 Definition sqr2_alpha := fun (_:nat) => O.
 Definition sqr2_w := fun k => S (S (S k)).
@@ -227,7 +227,7 @@ Defined.
 
 (* sqr2 is strictly increasing at least on interval [1;infinity] *)
 
-Definition sqr2_incr : forall x y, Rle (inject_Q (1#1)) x -> Rle (inject_Q (1#1)) y -> 
+Definition sqr2_incr : forall x y, Rle (inject_Q 1) x -> Rle (inject_Q 1) y -> 
   Rlt x y -> Rlt (sqr2_apply x) (sqr2_apply y).
 unfold Rlt; intros.
 apply Rpos_alt_2.
@@ -241,7 +241,7 @@ generalize (Hp _ H); clear Hp H; intros.
 fedup.
 Qed.
 
-Lemma One_lt_Two : Rlt (inject_Q (1#1)) (inject_Q (2#1)).
+Lemma One_lt_Two : Rlt (inject_Q 1) (inject_Q 2).
 exists O.
 unfold Rpos_k.
 unfold inject_Q; simpl; auto.
@@ -291,7 +291,7 @@ Record itvl : Set := { lft : Q ; rht : Q ; lft_rht : lft<rht}.
 (*Check itvl.*)
 
 Definition two_three: itvl.
-apply (Build_itvl (2#1) (3#1)).
+apply (Build_itvl 2 3).
 unfold Qlt; simpl; auto with zarith.
 Qed.
 
@@ -311,12 +311,12 @@ Record continuous (i:itvl) : Set := {
    cont_w : nat -> nat; 
    cont_cauchy: forall a, Is_Cauchy (cont_h a) cont_alpha;    
    cont_unif : forall a b n k, le n (cont_alpha k) -> in_itvl i a -> in_itvl i b ->   
-       -1#1 <= (a-b)*(!2^(pred (cont_w k))) <= 1#1 -> 
-       -1#1 <= (cont_h a n - cont_h b n)*!2^k <= 1#1
+       -1 <= (a-b)*(!2^(pred (cont_w k))) <= 1 -> 
+       -1 <= (cont_h a n - cont_h b n)*!2^k <= 1
 }.
 
 Definition one_two : itvl. 
-apply (Build_itvl (1#1) (2#1) ).
+apply (Build_itvl 1 2 ).
 unfold Qlt; simpl; auto with zarith.
 Qed.
 
@@ -332,7 +332,7 @@ Require Zcomplements.
 
 Definition sqrt2_approx : nat -> itvl.
 induction 1. 
-apply (Build_itvl (1#1) (2#1)); unfold Qlt; simpl; omega.
+apply (Build_itvl 1 2); unfold Qlt; simpl; omega.
 elim IHnat; intros a b ab.
 set (c:= (Qred ((2#3)*a+(1#3)*b))).
 set (d:= (Qred ((1#3)*a+(2#3)*b))).
@@ -358,7 +358,7 @@ assert (fcfd : Rlt fc fd).
   fedup.
   fedup.
  apply Qlt_Rlt; auto.
-case (Rcompare fc fd fcfd (inject_Q (0#1))); intros.
+case (Rcompare fc fd fcfd (inject_Q (0))); intros.
 apply (Build_itvl c b).
   fedup.
 apply (Build_itvl a d).
