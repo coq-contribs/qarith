@@ -84,3 +84,14 @@ ring.
 Qed.
 
 End Examples.
+
+Lemma Qopp_plus : forall a b,  -(a+b) == -a + -b.
+Proof.
+intros; ring.
+Qed.
+
+Lemma Qopp_opp : forall q, - -q==q.
+Proof.
+intros; ring.
+Qed.
+

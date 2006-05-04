@@ -98,13 +98,6 @@ intros.
 rewrite <- two_power_nat_S; auto with zarith.
 Qed.
 
-Lemma Qopp_plus : forall a b,  -(a+b) == -a + -b.
-intros (a1,a2) (b1,b2).
-unfold Qopp, Qplus, Qeq; simpl.
-ring.
-Qed.
-
-
 Lemma max_le : forall a b c, le (max a b) c -> le a c /\ le b c.
 eauto with arith.
 Qed.
@@ -145,10 +138,6 @@ apply Qle_plus_compat; auto.
 Defined.
 
 (* Extraction Rplus. *)
-
-Lemma Qopp_opp : forall q, - -q==q.
-unfold Qopp, Qeq; intros; simpl; ring.
-Qed.
 
 Definition Ropp : R -> R.
 intros x.
@@ -249,10 +238,6 @@ unfold inject_Q; simpl; auto.
 unfold Qle; simpl; auto with zarith.
 Qed.
 
-Lemma Zmult_times : forall a b:positive, (Zpos (a*b)=Zpos a*Zpos b)%Z.
-unfold Zmult; auto.
-Qed.
-
 Require Import nat_log.
 
 Lemma two_p_correct : forall n, !2^n = two_p (Z_of_nat n).
@@ -342,7 +327,7 @@ assert (cd : c<d).
    setoid_rewrite (Qred_correct  ((1#3)*a+(2#3)*b)).
    generalize ab; unfold c, d, Qlt, Qmult, Qplus, Qnum, Qden.
    case a; intros a1 a2; case b; intros b1 b2.
-   repeat rewrite Zmult_times; set (A2 := Zpos a2) in *; set (B2 := Zpos b2) in *.
+   kill_times; set (A2 := Zpos a2) in *; set (B2 := Zpos b2) in *.
    intros.
    apply Zlt_left_rev.
    match goal with |- ( ?e1 < ?e2)%Z => ring e1; ring e2 end.
@@ -350,7 +335,7 @@ assert (cd : c<d).
    with ((27*B2*A2)*(b1*A2) + - ((27*B2*A2)*(a1*B2)))%Z.
    apply Zlt_left_lt.
    apply Zmult_lt_compat_l; auto.
-   repeat rewrite <- Zmult_times; unfold Zlt; auto with zarith.
+   kill_times; unfold Zlt; auto with zarith.
    ring.  
 set (fc := sqr2_apply (inject_Q c)).
 set (fd := sqr2_apply (inject_Q d)).

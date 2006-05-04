@@ -310,6 +310,11 @@ Qed.
 
 (* Qone is a neutral element for multiplication: *)
 
+Lemma Qmult_1_n : forall n, 1*n == n.
+Proof.
+ intro; red; simpl; destruct (Qnum n); auto.
+Qed.
+
 Theorem Qmult_n_1 : forall n, n*1==n.
 Proof.
  intro; red; simpl.
@@ -355,6 +360,13 @@ Proof.
  intros (x1, x2); unfold Qeq, Qdiv, Qmult; case x1; simpl;
   intros; kill_times; try ring.
  elim H; auto. 
+Qed.
+
+Lemma Qmult_Qinv : forall p q, / (p * q) == /p * /q.
+Proof.
+intros (x1,x2) (y1,y2); unfold Qeq, Qinv, Qmult; simpl.
+destruct x1; simpl; auto; 
+ destruct y1; simpl; auto.
 Qed.
 
 Theorem Qmult_Qdiv : forall x y, ~ y == 0 -> (x*y)/y == x.
@@ -406,20 +418,50 @@ Proof.
 unfold Qlt, Qeq; auto with zarith.
 Qed.
 
-Lemma Qlt_trans : forall x y z, x<y -> y<z -> x<z.
+(** Large = strict or equal *)
+
+Lemma Qlt_le_weak : forall x y, x<y -> x<=y.
 Proof.
-unfold Qlt; intros (x1, x2) (y1, y2) (z1, z2); simpl; intros.
+unfold Qle, Qlt; auto with zarith.
+Qed.
+
+Lemma Qle_lt_trans : forall x y z, x<=y -> y<z -> x<z.
+Proof.
+unfold Qle, Qlt; intros (x1, x2) (y1, y2) (z1, z2); simpl; intros.
 Open Scope Z_scope.
 apply Zgt_lt.
 apply Zmult_gt_reg_r with ('y2).
 red; trivial.
-apply Zgt_trans with (y1 * 'x2 * 'z2).
+apply Zgt_le_trans with (y1 * 'x2 * 'z2).
 replace (y1 * 'x2 * 'z2) with (y1 * 'z2 * 'x2) by ring.
 replace (z1 * 'x2 * 'y2) with (z1 * 'y2 * 'x2) by ring.
 apply Zmult_gt_compat_r; auto with zarith. 
 replace (x1 * 'z2 * 'y2) with (x1 * 'y2 * 'z2) by ring.
+apply Zmult_le_compat_r; auto with zarith. 
+Open Scope Q_scope.
+Qed.
+
+Lemma Qlt_le_trans : forall x y z, x<y -> y<=z -> x<z.
+Proof.
+unfold Qle, Qlt; intros (x1, x2) (y1, y2) (z1, z2); simpl; intros.
+Open Scope Z_scope.
+apply Zgt_lt.
+apply Zmult_gt_reg_r with ('y2).
+red; trivial.
+apply Zle_gt_trans with (y1 * 'x2 * 'z2).
+replace (y1 * 'x2 * 'z2) with (y1 * 'z2 * 'x2) by ring.
+replace (z1 * 'x2 * 'y2) with (z1 * 'y2 * 'x2) by ring.
+apply Zmult_le_compat_r; auto with zarith. 
+replace (x1 * 'z2 * 'y2) with (x1 * 'y2 * 'z2) by ring.
 apply Zmult_gt_compat_r; auto with zarith. 
 Open Scope Q_scope.
+Qed.
+
+Lemma Qlt_trans : forall x y z, x<y -> y<z -> x<z.
+Proof.
+intros.
+apply Qle_lt_trans with y; auto.
+apply Qlt_le_weak; auto.
 Qed.
 
 (** [x<y] iff [~(y<=x)] *)
@@ -444,13 +486,6 @@ Proof.
 unfold Qle, Qlt; auto with zarith.
 Qed.
 
-(** Large = strict or equal *)
-
-Lemma Qlt_le_weak : forall x y, x<y -> x<=y.
-Proof.
-unfold Qle, Qlt; auto with zarith.
-Qed.
-
 Lemma Qle_lt_or_eq : forall x y, x<=y -> x<y \/ x==y.
 Proof.
 unfold Qle, Qlt, Qeq; intros; apply Zle_lt_or_eq; auto.
@@ -471,6 +506,26 @@ exact (Z_lt_le_dec (Qnum x * QDen y) (Qnum y * QDen x)).
 Defined.
 
 (** Compatibility of operations with respect to order. *)
+
+Lemma Qle_opp : forall p q, p<=q -> -q <= -p.
+Proof.
+intros (a1,a2) (b1,b2); unfold Qle, Qlt; simpl.
+do 2 rewrite <- Zopp_mult_distr_l; omega.
+Qed.
+
+Lemma Qle_minus : forall p q, p <= q <-> 0 <= q+-p.
+Proof.
+intros (x1,x2) (y1,y2); unfold Qle; simpl.
+rewrite <- Zopp_mult_distr_l.
+split; omega.
+Qed.
+
+Lemma Qlt_minus : forall p q, p < q <-> 0 < q+-p.
+Proof.
+intros (x1,x2) (y1,y2); unfold Qlt; simpl.
+rewrite <- Zopp_mult_distr_l.
+split; omega.
+Qed.
 
 Lemma Qle_plus_compat :
  forall x y z t, x<=y -> z<=t -> x+z <= y+t.
@@ -512,4 +567,64 @@ intros; apply Zmult_le_reg_r with (c1*'c2); auto with zarith.
 Open Scope Q_scope.
 Qed.
 
+Lemma Qlt_mult_compat : forall x y z, 0 < z  -> x < y -> x*z < y*z.
+Proof.
+intros (a1,a2) (b1,b2) (c1,c2); unfold Qle, Qlt; simpl.
+Open Scope Z_scope.
+intros; kill_times.
+replace (a1*c1*('b2*'c2)) with ((a1*'b2)*(c1*'c2)) by ring.
+replace (b1*c1*('a2*'c2)) with ((b1*'a2)*(c1*'c2)) by ring.
+apply Zmult_lt_compat_r; auto with zarith.
+apply Zmult_lt_0_compat.
+omega.
+compute; auto.
+Open Scope Q_scope.
+Qed.
+
+(** Rational to the n-th power *)
+
+Fixpoint Qpower (q:Q)(n:nat) { struct n } : Q := 
+ match n with 
+  | O => 1
+  | S n => q * (Qpower q n)
+ end. 
+
+Notation " q ^ n " := (Qpower q n) : Q_scope.
+
+Lemma Qpower_1 : forall n, 1^n == 1.
+Proof.
+induction n; simpl; auto with qarith.
+rewrite IHn; auto with qarith.
+Qed.
+
+Lemma Qpower_0 : forall n, n<>O -> 0^n == 0.
+Proof.
+destruct n; simpl.
+destruct 1; auto.
+intros. 
+compute; auto.
+Qed.
+
+Lemma Qpower_le_0 : forall p n, 0 <= p -> 0 <= p^n.
+Proof.
+induction n; simpl; auto with qarith.
+intros; compute; intro; discriminate.
+intros.
+apply Qle_trans with (0*(p^n)).
+compute; intro; discriminate.
+apply Qle_mult_compat; auto.
+Qed.
+
+Lemma Qinv_power_n : forall n p, (1#p)^n == /(inject_Z ('p))^n.
+Proof.
+induction n.
+compute; auto.
+simpl.
+(* unfold Qdiv in IHn; rewrite Qmult_1_n in IHn.*) (*BUG*)
+intros; rewrite IHn; clear IHn.
+unfold Qdiv; rewrite Qmult_Qinv.
+setoid_replace (1#p) with (/ inject_Z ('p)).
+apply Qeq_refl.
+compute; auto.
+Qed.
 
