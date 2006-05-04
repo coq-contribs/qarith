@@ -19,7 +19,6 @@ Require Export Zpower.
 Require Export Zlogarithm.
 Require Export QArith.
 
-Notation " !2^ y" := (two_power_nat y) (at level 30).
 Coercion inject_Z : Z >-> Q.
 
 (**** A quick & dirty implementation of constructive reals. ****)
@@ -30,7 +29,7 @@ Coercion inject_Z : Z >-> Q.
 
 Definition Is_Cauchy (f : nat -> Q) (mo : nat -> nat) :=
   forall k m n,  (mo k <= m)%nat -> (mo k <= n)%nat ->
-  let e:=(f m - f n)*!2^k in  -1 <= e <= 1.
+  -(1#2)^k <= f m - f n <= (1#2)^k.
 
 (* A real is given by a cauchy sequence, a modulus sequence *)
 (* and a proof of the Cauchy property of these sequences. *)
@@ -45,13 +44,18 @@ Record R : Set := {
 (* A rational is injected into R via a constant cauchy sequence. *)
 
 Definition inject_Q : Q -> R.
+Proof.
 intros q.
 apply (Build_R (fun _ => q) (fun _ => O)).
 red; intros.
-assert ((q-q)*!2^k==0#1).
-ring.
-setoid_rewrite H1.
-unfold Qle, Zle; simpl; intuition; inversion H2.
+assert (H1: q-q == 0) by ring.
+rewrite H1; clear H1.
+assert (0 <= (1#2)^k).
+ apply Qpower_le_0. 
+ compute; intro; discriminate.
+split; auto.
+replace 0 with (-0) by auto.
+apply Qle_opp; auto.
 Defined.
 
 (* Extraction inject_Q. *)
@@ -62,20 +66,19 @@ Definition Req : R -> R -> Prop:=
     fun x y : R => 
       forall k, let M := modulus x (S k) in 
             let N := modulus y (S k) in 
-            let e := (cauchy x M - cauchy y N)*!2^k in 
-            -1 <= e <= 1.         
+            -(1#2)^k <= cauchy x M - cauchy y N <= (1#2)^k.         
 
 (* The informative positivity upon R. *)
 
 Definition Rpos_k : nat -> R -> Prop :=
-  fun k x => -1 <= (cauchy x (modulus x (S k)))*!2^k.
+  fun k x => (1#2)^k <= cauchy x (modulus x (S k)).
 
 Definition Rpos : R -> Set := fun x => { k:nat | Rpos_k k x }.
 
 (* The logical non-negativity upon R. *)
 
 Definition Rnonneg : R -> Prop := 
- fun x => forall k:nat, -1 <= (cauchy x (modulus x k))*!2^k.
+ fun x => forall k:nat, -(1#2)^k <= cauchy x (modulus x k).
 
 (* The Dirty Part: *)
 
@@ -93,16 +96,20 @@ Qed.
 (* Only the informative parts are provided. 
     The logical statement is skipped. *)
 
+(*
 Lemma two_power_S : forall k, !2^(S k) = (2 *(!2^k))%Z.
 intros. 
 rewrite <- two_power_nat_S; auto with zarith.
 Qed.
+*)
 
 Lemma max_le : forall a b c, le (max a b) c -> le a c /\ le b c.
+Proof.
 eauto with arith.
 Qed.
 
 Definition Rplus : R -> R -> R.
+Proof.
 intros x y.
 apply (Build_R (fun n => cauchy x n + cauchy y n)
                           (fun k => max (modulus x (S k)) (modulus y (S k)))).
@@ -115,26 +122,21 @@ assert (H6 := is_cauchy y (S k) m n H4 H2).
 clear N M H H0 H1 H2 H3 H4.
 set (Xn := cauchy x n) in *; set (Xm := cauchy x m) in *; 
 set (Yn := cauchy y n) in *; set (Ym := cauchy y m) in *.
-rewrite two_power_S in H5; rewrite two_power_S in H6.
 destruct H5; destruct H6.
-
-assert (((Xm+Ym-(Xn+Yn)) * !2^k) * 2%Z == 
-                ((Xm-Xn) * (2%Z*!2^k))+((Ym-Yn) * (2%Z*!2^k))).
-ring.
-
+assert ((Xm+Ym-(Xn+Yn)) == ((Xm-Xn) +(Ym-Yn))) by ring.
+rewrite H3; clear H3.
+assert ((1#2)^(S k) + (1#2)^(S k) == (1#2)^k) by simpl; ring.
 split.
 
-apply Qle_mult_compat2 with 2%Z.
-unfold Qlt; simpl; omega.
-replace (-1 * 2%Z) with (-1 + -1); simpl; auto.
-setoid_rewrite H3.
+apply Qle_trans with (- (1#2)^(S k)+ -(1#2)^(S k)).
+rewrite <- Qopp_plus.
+apply Qle_opp.
+rewrite H3; clear H3; apply Qle_refl.
 apply Qle_plus_compat; auto.
 
-apply Qle_mult_compat2 with 2%Z.
-unfold Qlt; simpl; omega.
-replace (1 * 2%Z) with (1+1); simpl; auto.
-setoid_rewrite H3.
+apply Qle_trans with ((1#2)^(S k) + (1#2)^(S k)).
 apply Qle_plus_compat; auto.
+rewrite H3; clear H3; apply Qle_refl.
 Defined.
 
 (* Extraction Rplus. *)
@@ -144,8 +146,8 @@ intros x.
 apply (Build_R (fun n => -(cauchy x n)) (fun k => modulus x k)).
 unfold Is_Cauchy; intros.
 unfold Qminus.
-setoid_rewrite (Qopp_opp (cauchy x n)).
-setoid_rewrite (Qplus_sym (-(cauchy x m)) (cauchy x n)).
+rewrite (Qopp_opp (cauchy x n)).
+rewrite (Qplus_sym (-(cauchy x m)) (cauchy x n)).
 apply (is_cauchy x k n m); auto.
 Defined.
 
@@ -158,16 +160,25 @@ Definition Rle : R -> R -> Prop := fun x y => Rnonneg (Rminus y x).
 (* An alternative characterization of positivity upon R. *)
 
 Definition Rpos_alt (x:R) := 
- {l:nat & { p:nat | forall n, le p n -> 1 <= (cauchy x n)*!2^l}}.
+ {l:nat & { p:nat | forall n, (p<=n)%nat -> (1#2)^l <= cauchy x n}}.
 
 Lemma Rpos_alt_1 : forall x:R, Rpos x -> Rpos_alt x.
+Proof.
 unfold Rpos, Rpos_k, Rpos_alt.
 intros.
 elim H; intros k Hk; clear H.
 exists (S k).
 exists (modulus x (S k)).
 intros.
-fedup.
+(*fedup.*)
+destruct (x.(is_cauchy) (S k) n (modulus x (S k))) as (Hx,_); auto.
+assert (H0:=Qle_plus_compat _ _ _ _ Hk Hx).
+assert (H1 : cauchy x (modulus x (S k)) + (cauchy x n - cauchy x (modulus x (S k)))
+            == cauchy x n) by ring. 
+revert H0; rewrite H1; clear H1; intros. (* BUG rewrite in *)
+assert ((1 # 2) ^ k + - (1 # 2) ^ S k == (1#2)^(S k)) by simpl; ring.
+revert H0; rewrite H1; clear H1; intros. (* BUG rewrite in *)
+auto.
 Defined.
 
 Lemma Rpos_alt_2 : forall x, Rpos_alt x -> Rpos x.
@@ -175,26 +186,97 @@ unfold Rpos, Rpos_k, Rpos_alt.
 intros.
 elim H; intros l Hl; elim Hl; intros p Hp; clear H Hl.
 exists (S l).
-fedup.
+(*fedup.*)
+set (M:=modulus x (S (S l))).
+set (N:=max p M).
+destruct (x.(is_cauchy) (S (S l)) M N) as (Hx,_); auto. 
+unfold N, M; auto with arith.
+apply Qle_trans with ((1#2)^l+(-(1#2)^(S (S l)))).
+setoid_replace ((1#2)^l + (- (1 # 2) ^(S (S l)))) with ((3#4)*(1#2)^l); [|simpl; ring].
+simpl; apply Qle_mult_compat.
+apply Qpower_le_0; compute; intro; discriminate.
+compute; intro; discriminate.
+setoid_replace (cauchy x M) with (cauchy x N +(cauchy x M - cauchy x N)); [|ring].
+apply Qle_plus_compat; auto.
+apply Hp; unfold N; auto with arith.
 Defined.
+
+
 
 
 (* The Key Lemma: comparison between three reals. *)
 
 Definition Rcompare : forall x y, Rlt x y -> forall z, Rlt x z + Rlt z y.
 unfold Rlt; intros.
-generalize (Rpos_alt_1 _ H); clear H; intros H.
-elim H; intros k Hk; elim Hk; intros p Hp; clear H Hk.
+destruct (Rpos_alt_1 _ H) as (k,(p,Hp)); clear H.
 set (k' := S (S k)).
-set (k'' := S (S k)).
-set (q := (max (modulus x k'') (max (modulus y k'') (max (modulus z k'') p)))).
-elim (Qlt_le_dec ((cauchy z q - cauchy x q)*!2^k') 2); intros.
-right.
-exists k'.
-fedup.
-left.
-exists k'.
-fedup.
+set (k'' := S (S k')).
+set (q := max (modulus x k'') (max (modulus y k'') (max (modulus z k'') p))).
+destruct (Qlt_le_dec (cauchy z q - cauchy x q)  ((1#2)^(S k))); 
+ [right|left]; exists k'.
+(*fedup.*)
+red; simpl cauchy; simpl cauchy in Hp.
+set (q' := max (modulus y (S (S k'))) (modulus z (S (S k')))).
+destruct (z.(is_cauchy) k'' q q') as (Hz,_); auto. 
+unfold q, k''; eauto with arith.
+unfold q', k''; auto with arith.
+destruct (y.(is_cauchy) k'' q' q) as (Hy,_); auto. 
+unfold q', k''; auto with arith.
+unfold q, k''; eauto with arith.
+assert (p <= q)%nat by unfold q; eauto with arith.
+assert (H0:=Hp q H); clear Hp H. 
+assert (H1:=Qle_opp _ _ (Qlt_le_weak _ _ q0)); clear q0.
+set (Yq' := cauchy y q') in *; set (Yq := cauchy y q) in *; 
+ set (Zq' := cauchy z q') in *; set (Zq := cauchy z q) in *; 
+ set (Xq := cauchy x q) in *; clearbody q q' Yq Yq' Zq Zq' Xq.
+generalize (Qle_plus_compat _ _ _ _ Hy
+                   (Qle_plus_compat _ _ _ _ H0 
+                       (Qle_plus_compat _ _ _ _ H1 Hz))).
+assert ((1#2)^k' == (1#4)*(1#2)^k) by simpl; ring.
+rewrite H; clear H.
+assert ((1#2)^k'' == (1#16)*(1#2)^k) by simpl; ring.
+rewrite H; clear H.
+simpl.
+match goal with |- ?a <= ?b -> _ => 
+ setoid_replace b with (Yq'+-Zq'); [|ring];
+ setoid_replace a with ((-(1#16)+1-(1#2)+-(1#16))*(1#2)^k); [|ring]; 
+ setoid_replace (-(1#16)+1-(1#2)+-(1#16)) with (3#8); [|compute; auto]
+end. (* Pourquoi ring ne marche sur le dernier bout ? *)
+intros.
+apply Qle_trans with ((3#8)*(1#2)^k); auto.
+apply Qle_mult_compat.
+apply Qpower_le_0; compute; intro; discriminate.
+compute; intro; discriminate.
+(*fedup.*)
+red; simpl cauchy; simpl cauchy in Hp.
+set (q' := max (modulus z (S (S k'))) (modulus x (S (S k')))).
+destruct (z.(is_cauchy) k'' q' q) as (Hz,_); auto. 
+unfold q', k''; auto with arith.
+unfold q, k''; eauto with arith.
+destruct (x.(is_cauchy) k'' q q') as (Hx,_); auto. 
+unfold q, k''; eauto with arith.
+unfold q', k''; auto with arith.
+clear Hp.
+set (Xq' := cauchy x q') in *; set (Xq := cauchy x q) in *; 
+ set (Zq' := cauchy z q') in *; set (Zq := cauchy z q) in *; 
+ clearbody q q' Xq Xq' Zq Zq'.
+generalize (Qle_plus_compat _ _ _ _ Hz
+                   (Qle_plus_compat _ _ _ _ q0 Hx)).
+assert ((1#2)^k' == (1#4)*(1#2)^k) by simpl; ring.
+rewrite H; clear H.
+assert ((1#2)^k'' == (1#16)*(1#2)^k) by simpl; ring.
+rewrite H; clear H.
+simpl.
+match goal with |- ?a <= ?b -> _ => 
+ setoid_replace b with (Zq'+-Xq'); [|ring];
+ setoid_replace a with ((-(1#16)+(1#2)+-(1#16))*(1#2)^k); [|ring]; 
+ setoid_replace (-(1#16)+(1#2)+-(1#16)) with (3#8); [|compute; auto]
+end. (* Pourquoi ring ne marche sur le dernier bout ? *)
+intros.
+apply Qle_trans with ((3#8)*(1#2)^k); auto.
+apply Qle_mult_compat.
+apply Qpower_le_0; compute; intro; discriminate.
+compute; intro; discriminate.
 Defined.
 
 (* Specialized continuity components for sqr2 = X^2-2 *)
@@ -240,12 +322,32 @@ Qed.
 
 Require Import nat_log.
 
-Lemma two_p_correct : forall n, !2^n = two_p (Z_of_nat n).
+Lemma two_p_correct : forall n, 2^n = two_p (Z_of_nat n).
+Proof.
+induction n.
+simpl; auto.
+simpl.
+rewrite IHn; clear IHn.
+unfold Z_of_nat, two_p.
 destruct n.
 simpl; auto.
-unfold Z_of_nat, two_p.
-rewrite two_power_pos_nat.
-rewrite nat_of_P_o_P_of_succ_nat_eq_succ; auto.
+simpl.
+set (p:=P_of_succ_nat n).
+unfold two_power_pos.
+do 2 rewrite shift_pos_nat; unfold shift_nat.
+rewrite nat_of_P_succ_morphism; simpl; auto.
+Qed.
+
+(** a enlever apres debug de rewrite et ring. *)
+Lemma Qhalf_power_n : forall n, (1#2)^n == 1/2^n.
+Proof.
+induction n.
+compute; auto.
+simpl.
+(* unfold Qdiv in IHn; rewrite Qmult_1_n in IHn.*) (*BUUG*)
+rewrite IHn; clear IHn.
+unfold Qdiv; rewrite Qmult_Qinv.
+do 2 rewrite Qmult_1_n; ring. (* ring seul devrait gagner ... *)
 Qed.
 
 (* The strict order is conserved when injecting Q in R. *)
@@ -254,19 +356,39 @@ Lemma Qlt_Rlt : forall a b, a<b -> Rlt (inject_Q a) (inject_Q b).
 intros a b; exists (nat_log_sup ((Qden b)*(Qden a))).
 unfold Rpos_k.
 unfold inject_Q; simpl; auto.
-generalize H; unfold Qle, Qlt; simpl; auto with zarith.
-intros.
-rewrite two_p_correct.
+rewrite Qinv_power_n.
+rewrite  two_p_correct.
 rewrite log_sup_log_sup.
 set (ab := (Qden b * Qden a)%positive) in *.
-set (baab := ((Qnum b)*(Zpos (Qden a))+(-(Qnum a))*(Zpos (Qden b)))%Z) in *.
-elim (log_sup_correct2 ab); intros; clear H1.
+assert ('ab <= two_p (log_sup ab)).
+ red; simpl; kill_times; destruct (log_sup_correct2 ab) as (_,H0); omega.
+apply Qle_mult_compat2 with (two_p (log_sup ab)).
+apply Qlt_le_trans with ('ab); [compute|]; auto.
+rewrite Qmult_sym.
+rewrite Qinv_Qmult.
+intro; rewrite H1 in H0; compute in H0; auto.
+rewrite Qmult_sym.
+apply Qle_trans with ('ab*(b+-a)); [|
+ apply Qle_mult_compat; auto; 
+ rewrite <- Qle_minus; apply Qlt_le_weak; auto].
+unfold ab; red; simpl.
+set (baab := ((Qnum b)*'(Qden a)+-(Qnum a)*'(Qden b))%Z).
 assert (1 <= baab)%Z.
-unfold baab; rewrite <- Zopp_mult_distr_l; omega.
+ unfold baab; rewrite <- Zopp_mult_distr_l; red in H; omega.
+destruct baab.
+(*baab = 0*)
+elim H1; auto.
+(*baab>0*)
+kill_times.
 rewrite Zmult_1_r.
-apply Zle_trans with (1*Zpos ab)%Z.
-compute; intro h; inversion h.
-apply Zmult_le_compat; auto with zarith.
+assert (H2:=Zmult_le_compat (' Qden b * ' Qden a) 1 (' Qden b * ' Qden a) ('p)).
+rewrite Zmult_1_r in H2.
+apply H2; auto.
+apply Zle_refl.
+compute; intro; discriminate.
+compute; intro; discriminate.
+(*baab<0*)
+elim H1; auto.
 Qed.
 
 (* Main part: we now build a sequence of nested intervals 
@@ -297,12 +419,12 @@ Record continuous (i:itvl) : Set := {
    cont_w : nat -> nat; 
    cont_cauchy: forall a, Is_Cauchy (cont_h a) cont_alpha;    
    cont_unif : forall a b n k, le n (cont_alpha k) -> in_itvl i a -> in_itvl i b ->   
-       -1 <= (a-b)*(!2^(pred (cont_w k))) <= 1 -> 
-       -1 <= (cont_h a n - cont_h b n)*!2^k <= 1
+       -(1#2)^(pred (cont_w k)) <= a-b <= (1#2)^(pred (cont_w k)) -> 
+       -(1#2)^k <= cont_h a n - cont_h b n <= (1#2)^k
 }.
 
 Definition one_two : itvl. 
-apply (Build_itvl 1 2 ).
+apply (Build_itvl 1 2).
 unfold Qlt; simpl; auto with zarith.
 Qed.
 
@@ -323,20 +445,15 @@ elim IHnat; intros a b ab.
 set (c:= (Qred ((2#3)*a+(1#3)*b))).
 set (d:= (Qred ((1#3)*a+(2#3)*b))).
 assert (cd : c<d).
-   unfold c, d; setoid_rewrite (Qred_correct ((2#3)*a+(1#3)*b)). 
-   setoid_rewrite (Qred_correct  ((1#3)*a+(2#3)*b)).
-   generalize ab; unfold c, d, Qlt, Qmult, Qplus, Qnum, Qden.
-   case a; intros a1 a2; case b; intros b1 b2.
-   kill_times; set (A2 := Zpos a2) in *; set (B2 := Zpos b2) in *.
-   intros.
-   apply Zlt_left_rev.
-   match goal with |- ( ?e1 < ?e2)%Z => ring e1; ring e2 end.
-   replace (-27*(B2*(B2*(A2*a1))) + 27*(B2*(A2*(A2*b1))))%Z
-   with ((27*B2*A2)*(b1*A2) + - ((27*B2*A2)*(a1*B2)))%Z.
-   apply Zlt_left_lt.
-   apply Zmult_lt_compat_l; auto.
-   kill_times; unfold Zlt; auto with zarith.
-   ring.  
+   unfold c, d.
+   rewrite Qlt_minus in ab |- *.
+   rewrite (Qred_correct ((2#3)*a+(1#3)*b)). 
+   rewrite (Qred_correct  ((1#3)*a+(2#3)*b)).
+   setoid_replace ((1 # 3) * a + (2 # 3) * b + - ((2 # 3) * a + (1 # 3) * b))
+   with ((b+-a)*((2#3)-(1#3))); [|ring].
+   setoid_replace ((2#3)-(1#3)) with (1#3); [|compute; auto].
+   setoid_replace 0 with (0*(1#3)); [|compute;auto].
+   apply Qlt_mult_compat; [compute|]; auto.
 set (fc := sqr2_apply (inject_Q c)).
 set (fd := sqr2_apply (inject_Q d)).
 assert (fcfd : Rlt fc fd).
@@ -344,7 +461,7 @@ assert (fcfd : Rlt fc fd).
   fedup.
   fedup.
  apply Qlt_Rlt; auto.
-case (Rcompare fc fd fcfd (inject_Q (0))); intros.
+case (Rcompare fc fd fcfd (inject_Q 0)); intros.
 apply (Build_itvl c b).
   fedup.
 apply (Build_itvl a d).
