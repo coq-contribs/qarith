@@ -620,11 +620,11 @@ Proof.
 induction n.
 compute; auto.
 simpl.
-(* unfold Qdiv in IHn; rewrite Qmult_1_n in IHn.*) (*BUG*)
 intros; rewrite IHn; clear IHn.
 unfold Qdiv; rewrite Qmult_Qinv.
 setoid_replace (1#p) with (/ inject_Z ('p)).
 apply Qeq_refl.
 compute; auto.
 Qed.
+
 

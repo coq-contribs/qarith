@@ -173,11 +173,9 @@ intros.
 (*fedup.*)
 destruct (x.(is_cauchy) (S k) n (modulus x (S k))) as (Hx,_); auto.
 assert (H0:=Qle_plus_compat _ _ _ _ Hk Hx).
-assert (H1 : cauchy x (modulus x (S k)) + (cauchy x n - cauchy x (modulus x (S k)))
-            == cauchy x n) by ring. 
-revert H0; rewrite H1; clear H1; intros. (* BUG rewrite in *)
-assert ((1 # 2) ^ k + - (1 # 2) ^ S k == (1#2)^(S k)) by simpl; ring.
-revert H0; rewrite H1; clear H1; intros. (* BUG rewrite in *)
+setoid_replace (cauchy x (modulus x (S k)) + (cauchy x n - cauchy x (modulus x (S k))))
+ with (cauchy x n) in H0; [|ring]. 
+setoid_replace ((1 # 2) ^ k + - (1 # 2) ^ S k) with ((1#2)^(S k)) in H0; [|simpl; ring].
 auto.
 Defined.
 
@@ -200,9 +198,6 @@ setoid_replace (cauchy x M) with (cauchy x N +(cauchy x M - cauchy x N)); [|ring
 apply Qle_plus_compat; auto.
 apply Hp; unfold N; auto with arith.
 Defined.
-
-
-
 
 (* The Key Lemma: comparison between three reals. *)
 
@@ -232,10 +227,8 @@ set (Yq' := cauchy y q') in *; set (Yq := cauchy y q) in *;
 generalize (Qle_plus_compat _ _ _ _ Hy
                    (Qle_plus_compat _ _ _ _ H0 
                        (Qle_plus_compat _ _ _ _ H1 Hz))).
-assert ((1#2)^k' == (1#4)*(1#2)^k) by simpl; ring.
-rewrite H; clear H.
-assert ((1#2)^k'' == (1#16)*(1#2)^k) by simpl; ring.
-rewrite H; clear H.
+setoid_replace ((1#2)^k') with ((1#4)*(1#2)^k); [|simpl; ring].
+setoid_replace ((1#2)^k'') with ((1#16)*(1#2)^k); [|simpl; ring].
 simpl.
 match goal with |- ?a <= ?b -> _ => 
  setoid_replace b with (Yq'+-Zq'); [|ring];
@@ -262,10 +255,8 @@ set (Xq' := cauchy x q') in *; set (Xq := cauchy x q) in *;
  clearbody q q' Xq Xq' Zq Zq'.
 generalize (Qle_plus_compat _ _ _ _ Hz
                    (Qle_plus_compat _ _ _ _ q0 Hx)).
-assert ((1#2)^k' == (1#4)*(1#2)^k) by simpl; ring.
-rewrite H; clear H.
-assert ((1#2)^k'' == (1#16)*(1#2)^k) by simpl; ring.
-rewrite H; clear H.
+setoid_replace ((1#2)^k') with ((1#4)*(1#2)^k); [|simpl; ring].
+setoid_replace ((1#2)^k'') with ((1#16)*(1#2)^k); [|simpl; ring].
 simpl.
 match goal with |- ?a <= ?b -> _ => 
  setoid_replace b with (Zq'+-Xq'); [|ring];
@@ -338,21 +329,10 @@ do 2 rewrite shift_pos_nat; unfold shift_nat.
 rewrite nat_of_P_succ_morphism; simpl; auto.
 Qed.
 
-(** a enlever apres debug de rewrite et ring. *)
-Lemma Qhalf_power_n : forall n, (1#2)^n == 1/2^n.
-Proof.
-induction n.
-compute; auto.
-simpl.
-(* unfold Qdiv in IHn; rewrite Qmult_1_n in IHn.*) (*BUUG*)
-rewrite IHn; clear IHn.
-unfold Qdiv; rewrite Qmult_Qinv.
-do 2 rewrite Qmult_1_n; ring. (* ring seul devrait gagner ... *)
-Qed.
-
 (* The strict order is conserved when injecting Q in R. *)
 
 Lemma Qlt_Rlt : forall a b, a<b -> Rlt (inject_Q a) (inject_Q b).
+Proof.
 intros a b; exists (nat_log_sup ((Qden b)*(Qden a))).
 unfold Rpos_k.
 unfold inject_Q; simpl; auto.
