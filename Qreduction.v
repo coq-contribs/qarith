@@ -40,77 +40,99 @@ Qed.
 
 Definition Qred (q : Q) :=
   let (q1, q2) := q in
-  let g := Zgcd (Zpos q2) q1 in (q1 / g)#(Z2P (Zpos q2 / g)).
+  let (r1,r2) := snd (Zgcd_gen q1 (Zpos q2)) in r1#(Z2P r2).
 
 Lemma Qred_correct : forall q, (Qred q) == q.
 Proof.
 intros (n, d); unfold Qred, Qeq in |- *; simpl in |- *.
-unfold Zgcd in |- *; case (Zgcd_spec (Zpos d) n); intros g.
-intuition.
-elim H; intros.
+unfold Zgcd_gen in |- *.
+destruct (Zgcd_gen_spec n (Zpos d)) as ((g,(nn,dd)),(_,(H1,(H2,H3)))).
+simpl.
+rewrite H2.
+rewrite H3.
 assert (0%Z <> g).
   intro. 
   elim H1; intros.
-  rewrite <- H4 in H5.
-  rewrite Zmult_comm in H5; inversion H5.
+  rewrite <- H in H3.
+  simpl in H3; inversion H3.
 
-assert (0 < Zpos d / g)%Z.
+assert (0 < dd)%Z.
   apply Zmult_gt_0_lt_0_reg_r with g.
   omega.
   rewrite Zmult_comm.
-  rewrite <- Z_div_exact_2; auto with zarith.
-  compute in |- *; auto.
-  apply Zdivide_mod; auto with zarith.
+  rewrite <- H3; compute; auto.
 rewrite Z2P_correct; auto.
-pattern n at 2 in |- *.
-rewrite (Z_div_exact_2 n g); try apply Zdivide_mod; auto with zarith.
-pattern d at 2 in |- *.
-rewrite (Z_div_exact_2 (Zpos d) g); try apply Zdivide_mod; auto with zarith.
 ring.
 Qed.
 
 Lemma Qred_complete : forall p q,  p==q -> Qred p = Qred q.
 Proof.
 intros (a, b) (c, d); unfold Qeq in |- *; simpl in |- *.
-unfold Zgcd in |- *; case (Zgcd_spec (Zpos b) a); intros g (Hg1, Hg2).
-unfold Zgcd in |- *; case (Zgcd_spec (Zpos d) c); intros g' (Hg'1, Hg'2).
+Open Scope Z_scope.
+unfold Zgcd_gen in |- *.
+destruct (Zgcd_gen_spec a (Zpos b)) as ((g,(aa,bb)),(Hg1,(Hg2,(Hg3,Hg4)))).
+destruct (Zgcd_gen_spec c (Zpos d)) as ((g',(cc,dd)),(Hg'1,(Hg'2,(Hg'3,Hg'4)))).
+simpl; intros.
+assert (g <> 0).
+  intro. 
+  elim Hg2; intros.
+  subst g.
+  simpl in Hg4; inversion Hg4.
+assert (g' <> 0).
+  intro. 
+  elim Hg'2; intros.
+  subst g'.
+  simpl in Hg'4; inversion Hg'4.
+elim (rel_prime_cross_prod aa bb cc dd).
+congruence.
+unfold rel_prime in |- *.
+(*rel_prime*)
+constructor.
+exists aa; auto with zarith.
+exists bb; auto with zarith.
 intros.
 inversion Hg1.
-inversion Hg'1.
-assert (g <> 0%Z).
-  intro. 
-  elim H0; intros.
-  subst g.
-  rewrite Zmult_comm in H7; inversion H7.
-assert (g' <> 0%Z).
-  intro. 
-  elim H3; intros.
-  subst g'.
-  rewrite Zmult_comm in H8; inversion H8.
-rewrite (Z_div_exact_2 a g) in H; try apply Zdivide_mod; auto with zarith.
-rewrite (Z_div_exact_2 (Zpos d) g') in H; try apply Zdivide_mod;
- auto with zarith.
-rewrite (Z_div_exact_2 (Zpos b) g) in H; try apply Zdivide_mod;
- auto with zarith.
-rewrite (Z_div_exact_2 c g') in H; try apply Zdivide_mod; auto with zarith.
-elim (rel_prime_cross_prod (a / g) (Zpos b / g) (c / g') (Zpos d / g')).
+destruct (H6 (g*x)).
+rewrite Hg3.
+destruct H2 as (xa,Hxa); exists xa; rewrite Hxa; ring.
+rewrite Hg4.
+destruct H3 as (xb,Hxb); exists xb; rewrite Hxb; ring.
+exists q.
+apply Zmult_reg_l with g; auto.
+pattern g at 1; rewrite H7; ring.
+(* /rel_prime *)
+unfold rel_prime in |- *.
+(* rel_prime *)
+constructor.
+exists cc; auto with zarith.
+exists dd; auto with zarith.
 intros.
-rewrite H8; rewrite H9; auto.
-unfold rel_prime in |- *; apply Zis_gcd_rel_prime; auto with zarith.
-unfold rel_prime in |- *; apply Zis_gcd_rel_prime; auto with zarith.
-apply Zmult_gt_0_reg_l with g.
-omega.
-rewrite <- Z_div_exact_2; try apply Zdivide_mod; auto with zarith.
-apply Zmult_gt_0_reg_l with g'.
-omega.
-rewrite <- Z_div_exact_2; try apply Zdivide_mod; auto with zarith.
-apply Zmult_reg_l with (g * g')%Z.
-intro; elim (Zmult_integral _ _ H8); auto.
-replace (g * g' * (a / g * (Zpos d / g')))%Z with
- (g * (a / g) * (g' * (Zpos d / g')))%Z.
-rewrite H.
-ring.
-ring.
+inversion Hg'1.
+destruct (H6 (g'*x)).
+rewrite Hg'3.
+destruct H2 as (xc,Hxc); exists xc; rewrite Hxc; ring.
+rewrite Hg'4.
+destruct H3 as (xd,Hxd); exists xd; rewrite Hxd; ring.
+exists q.
+apply Zmult_reg_l with g'; auto.
+pattern g' at 1; rewrite H7; ring.
+(* /rel_prime *)
+assert (0<bb); [|auto with zarith].
+  apply Zmult_gt_0_lt_0_reg_r with g.
+  omega.
+  rewrite Zmult_comm.
+  rewrite <- Hg4; compute; auto.
+assert (0<dd); [|auto with zarith].
+  apply Zmult_gt_0_lt_0_reg_r with g'.
+  omega.
+  rewrite Zmult_comm.
+  rewrite <- Hg'4; compute; auto.
+apply Zmult_reg_l with (g'*g).
+intro H2; elim (Zmult_integral _ _ H2); auto.
+replace (g'*g*(aa*dd)) with ((g*aa)*(g'*dd)); [|ring].
+replace (g'*g*(bb*cc)) with ((g'*cc)*(g*bb)); [|ring].
+rewrite <- Hg3; rewrite <- Hg4; rewrite <- Hg'3; rewrite <- Hg'4; auto.
+Open Scope Q_scope.
 Qed.
 
 Add Morphism Qred : Qred_comp. 
