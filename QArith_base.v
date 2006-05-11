@@ -273,7 +273,7 @@ Qed.
 
 (* Commutativity of addition: *)
 
-Theorem Qplus_sym : forall x y, x+y == y+x.
+Theorem Qplus_comm : forall x y, x+y == y+x.
 Proof.
  intros (x1, x2); unfold Qeq, Qplus; simpl.
  intros; rewrite Pmult_comm; ring.
@@ -324,7 +324,7 @@ Qed.
 
 (* The commutativity for Qmult: *)
 
-Theorem Qmult_sym : forall x y, x*y==y*x.
+Theorem Qmult_comm : forall x y, x*y==y*x.
 Proof.
  intros; red; simpl; rewrite Pmult_comm; ring.
 Qed.
@@ -381,7 +381,7 @@ Theorem Qdiv_Qmult : forall x y, ~ y == 0 -> y*(x/y) == x.
 Proof.
  intros; unfold Qdiv.
  rewrite (Qmult_assoc y x (Qinv y)).
- rewrite (Qmult_sym y x).
+ rewrite (Qmult_comm y x).
  fold (Qdiv (Qmult x y) y).
  apply Qmult_Qdiv; auto.
 Qed.

@@ -147,7 +147,7 @@ apply (Build_R (fun n => -(cauchy x n)) (fun k => modulus x k)).
 unfold Is_Cauchy; intros.
 unfold Qminus.
 rewrite (Qopp_opp (cauchy x n)).
-rewrite (Qplus_sym (-(cauchy x m)) (cauchy x n)).
+rewrite (Qplus_comm (-(cauchy x m)) (cauchy x n)).
 apply (is_cauchy x k n m); auto.
 Defined.
 
@@ -344,10 +344,10 @@ assert ('ab <= two_p (log_sup ab)).
  red; simpl; kill_times; destruct (log_sup_correct2 ab) as (_,H0); omega.
 apply Qle_mult_compat2 with (two_p (log_sup ab)).
 apply Qlt_le_trans with ('ab); [compute|]; auto.
-rewrite Qmult_sym.
+rewrite Qmult_comm.
 rewrite Qinv_Qmult.
 intro; rewrite H1 in H0; compute in H0; auto.
-rewrite Qmult_sym.
+rewrite Qmult_comm.
 apply Qle_trans with ('ab*(b+-a)); [|
  apply Qle_mult_compat; auto; 
  rewrite <- Qle_minus; apply Qlt_le_weak; auto].

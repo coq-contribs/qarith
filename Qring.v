@@ -29,15 +29,15 @@ Qed.
 Definition Qsrt : Setoid_Ring_Theory Qeq Qplus Qmult 1 0 Qopp Qeq_bool.
 Proof.
 constructor.
-exact Qplus_sym.
+exact Qplus_comm.
 exact Qplus_assoc.
-exact Qmult_sym.
+exact Qmult_comm.
 exact Qmult_assoc.
-intro; rewrite Qplus_sym; apply Qzero_right.
-intro; rewrite Qmult_sym; apply Qmult_n_1.
+intro; rewrite Qplus_comm; apply Qzero_right.
+intro; rewrite Qmult_comm; apply Qmult_n_1.
 exact Qplus_inverse_r.
-intros; rewrite Qmult_sym;
- rewrite (Qmult_sym n p); rewrite (Qmult_sym m p);
+intros; rewrite Qmult_comm;
+ rewrite (Qmult_comm n p); rewrite (Qmult_comm m p);
  apply Qmult_plus_distr_r; auto.
 unfold Is_true; intros x y; generalize (Qeq_bool_correct x y);
  case (Qeq_bool x y); auto.
