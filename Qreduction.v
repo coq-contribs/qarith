@@ -36,53 +36,113 @@ Proof.
  simple destruct z; simpl in |- *; auto; intros; elim H; auto.
 Qed.
 
-(* Simplification of fractions using the Zgcd. *)
+(** First, a simple cancelation by powers of two *)
 
-Definition Qred (q : Q) :=
-  let (q1, q2) := q in
-  let (r1,r2) := snd (Zgcd_gen q1 (Zpos q2)) in r1#(Z2P r2).
+Fixpoint Pfactor_twos (p p':positive) {struct p} : (positive*positive) := 
+ match p, p' with 
+  | xO p, xO p' => Pfactor_twos p p'
+  | _, _ => (p,p')
+ end.
+
+Definition Qfactor_twos (q:Q) := 
+ let (p,q) := q in 
+ match p with 
+   | Z0 => 0
+   | Zpos p => let (p,q) := Pfactor_twos p q in (Zpos p)#q
+   | Zneg p => let (p,q) := Pfactor_twos p q in (Zneg p)#q
+ end.
+
+Lemma Pfactor_twos_correct : forall p p', 
+   (p*(snd (Pfactor_twos p p')))%positive = 
+   (p'*(fst (Pfactor_twos p p')))%positive.
+Proof.
+induction p; intros.
+simpl snd; simpl fst; rewrite Pmult_comm; auto.
+destruct p'.
+simpl snd; simpl fst; rewrite Pmult_comm; auto.
+simpl; f_equal; auto.
+simpl snd; simpl fst; rewrite Pmult_comm; auto.
+simpl snd; simpl fst; rewrite Pmult_comm; auto.
+Qed.
+
+Lemma Qfactor_twos_correct : forall q, Qfactor_twos q == q.
+Proof.
+intros (p,q).
+destruct p.
+red; simpl; auto.
+simpl.
+generalize (Pfactor_twos_correct p q); destruct (Pfactor_twos p q).
+red; simpl.
+intros; f_equal.
+rewrite H; apply Pmult_comm.
+simpl.
+generalize (Pfactor_twos_correct p q); destruct (Pfactor_twos p q).
+red; simpl.
+intros; f_equal.
+rewrite H; apply Pmult_comm.
+Qed.
+Hint Resolve Qfactor_twos_correct.
+
+(** Simplification of fractions using [Zgcd].
+  This version can compute within Coq. *)
+
+Definition Qred (q:Q) := 
+  let (q1,q2) := Qfactor_twos q in 
+  let (r1,r2) := snd (Zggcd q1 (Zpos q2)) in r1#(Z2P r2).
 
 Lemma Qred_correct : forall q, (Qred q) == q.
 Proof.
-intros (n, d); unfold Qred, Qeq in |- *; simpl in |- *.
-unfold Zgcd_gen in |- *.
-destruct (Zgcd_gen_spec n (Zpos d)) as ((g,(nn,dd)),(_,(H1,(H2,H3)))).
-simpl.
-rewrite H2.
-rewrite H3.
-assert (0%Z <> g).
-  intro. 
-  elim H1; intros.
-  rewrite <- H in H3.
-  simpl in H3; inversion H3.
+intros; apply Qeq_trans with (Qfactor_twos q); auto.
+unfold Qred.
+destruct (Qfactor_twos q) as (n,d); red; simpl.
+generalize (Zggcd_gcd n ('d)) (Zgcd_pos n ('d)) 
+  (Zgcd_is_gcd n ('d)) (Zggcd_correct_divisors n ('d)).
+destruct (Zggcd n (Zpos d)) as (g,(nn,dd)); simpl.
+Open Scope Z_scope.
+intuition.
+rewrite <- H in H0,H1; clear H.
+rewrite H3; rewrite H4.
+assert (0 <> g).
+  intro; subst g; discriminate.
 
-assert (0 < dd)%Z.
+assert (0 < dd).
   apply Zmult_gt_0_lt_0_reg_r with g.
   omega.
   rewrite Zmult_comm.
-  rewrite <- H3; compute; auto.
+  rewrite <- H4; compute; auto.
 rewrite Z2P_correct; auto.
 ring.
 Qed.
 
 Lemma Qred_complete : forall p q,  p==q -> Qred p = Qred q.
 Proof.
-intros (a, b) (c, d); unfold Qeq in |- *; simpl in |- *.
+intros.
+assert (Qfactor_twos p == Qfactor_twos q).
+ apply Qeq_trans with p; auto.
+ apply Qeq_trans with q; auto.
+ symmetry; auto.
+clear H.
+unfold Qred.
+destruct (Qfactor_twos p) as (a,b); 
+destruct (Qfactor_twos q) as (c,d); clear p q.
+unfold Qeq in *; simpl in *.
 Open Scope Z_scope.
-unfold Zgcd_gen in |- *.
-destruct (Zgcd_gen_spec a (Zpos b)) as ((g,(aa,bb)),(Hg1,(Hg2,(Hg3,Hg4)))).
-destruct (Zgcd_gen_spec c (Zpos d)) as ((g',(cc,dd)),(Hg'1,(Hg'2,(Hg'3,Hg'4)))).
-simpl; intros.
+generalize (Zggcd_gcd a ('b)) (Zgcd_is_gcd a ('b)) 
+ (Zgcd_pos a ('b)) (Zggcd_correct_divisors a ('b)).
+destruct (Zggcd a (Zpos b)) as (g,(aa,bb)).
+generalize (Zggcd_gcd c ('d)) (Zgcd_is_gcd c ('d)) 
+ (Zgcd_pos c ('d)) (Zggcd_correct_divisors c ('d)).
+destruct (Zggcd c (Zpos d)) as (g',(cc,dd)).
+simpl.
+intro H; rewrite <- H; clear H.
+intros Hg'1 Hg'2 (Hg'3,Hg'4).
+intro H; rewrite <- H; clear H.
+intros Hg1 Hg2 (Hg3,Hg4).
+intros.
 assert (g <> 0).
-  intro. 
-  elim Hg2; intros.
-  subst g.
-  simpl in Hg4; inversion Hg4.
+  intro; subst g; discriminate.
 assert (g' <> 0).
-  intro. 
-  elim Hg'2; intros.
-  subst g'.
-  simpl in Hg'4; inversion Hg'4.
+  intro; subst g'; discriminate.
 elim (rel_prime_cross_prod aa bb cc dd).
 congruence.
 unfold rel_prime in |- *.
@@ -142,15 +202,56 @@ rewrite (Qred_correct q); auto.
 rewrite (Qred_correct q'); auto.
 Qed.
 
+(** Another version, dedicated to extraction *)
+
+Definition Qred_extr (q : Q) :=
+  let (q1, q2) := Qfactor_twos q in
+  let (p,_) := Zggcd_spec_pos (Zpos q2) (Zle_0_pos q2) q1 in  
+  let (r2,r1) := snd p in r1#(Z2P r2).
+
+Lemma Qred_extr_Qred : forall q, Qred_extr q = Qred q.
+Proof.
+unfold Qred, Qred_extr.
+intro q; destruct (Qfactor_twos q) as (n,p); clear q.
+Open Scope Z_scope.
+destruct (Zggcd_spec_pos (' p) (Zle_0_pos p) n) as ((g,(pp,nn)),H).
+generalize (H (Zle_0_pos p)); clear H; intros (Hg1,(Hg2,(Hg4,Hg3))).
+simpl.
+generalize (Zggcd_gcd n ('p)) (Zgcd_is_gcd n ('p)) 
+ (Zgcd_pos n ('p)) (Zggcd_correct_divisors n ('p)).
+destruct (Zggcd n (Zpos p)) as (g',(nn',pp')); simpl.
+intro H; rewrite <- H; clear H.
+intros Hg'1 Hg'2 (Hg'3,Hg'4).
+assert (g<>0).
+ intro; subst g; discriminate.
+destruct (Zis_gcd_uniqueness_apart_sign n ('p) g g'); auto.
+apply Zis_gcd_sym; auto.
+subst g'.
+f_equal.
+apply Zmult_reg_l with g; auto; congruence.
+f_equal.
+apply Zmult_reg_l with g; auto; congruence.
+elimtype False; omega.
+Open Scope Q_scope.
+Qed.
+
+Add Morphism Qred_extr : Qred_extr_comp. 
+Proof.
+intros q q' H.
+do 2 rewrite Qred_extr_Qred.
+rewrite (Qred_correct q); auto.
+rewrite (Qred_correct q'); auto.
+Qed.
+
 Definition Qplus' (p q : Q) := Qred (Qplus p q).
 Definition Qmult' (p q : Q) := Qred (Qmult p q). 
 
-Lemma Qplus'_correct : forall p q : Q, Qeq (Qplus' p q) (Qplus p q).
+Lemma Qplus'_correct : forall p q : Q, (Qplus' p q)==(Qplus p q).
 Proof.
 intros; unfold Qplus' in |- *; apply Qred_correct; auto.
 Qed.
 
-Lemma Qmult'_correct : forall p q : Q, Qeq (Qmult' p q) (Qmult p q).
+Lemma Qmult'_correct : forall p q : Q, (Qmult' p q)==(Qmult p q).
 Proof.
 intros; unfold Qmult' in |- *; apply Qred_correct; auto.
 Qed.
@@ -165,3 +266,4 @@ Add Morphism Qmult' : Qmult'_comp.
 intros; unfold Qmult' in |- *.
 rewrite H; rewrite H0; auto with qarith.
 Qed.
+

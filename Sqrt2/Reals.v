@@ -302,14 +302,14 @@ exists p.
 intros.
 generalize (Hp _ H); clear Hp H; intros.
 fedup.
-Qed.
+Defined.
 
 Lemma One_lt_Two : Rlt (inject_Q 1) (inject_Q 2).
 exists O.
 unfold Rpos_k.
 unfold inject_Q; simpl; auto.
 unfold Qle; simpl; auto with zarith.
-Qed.
+Defined.
 
 Require Import nat_log.
 
@@ -369,7 +369,7 @@ compute; intro; discriminate.
 compute; intro; discriminate.
 (*baab<0*)
 elim H1; auto.
-Qed.
+Defined.
 
 (* Main part: we now build a sequence of nested intervals 
    containing sqrt(2). *)
@@ -427,6 +427,7 @@ set (d:= (Qred ((1#3)*a+(2#3)*b))).
 assert (cd : c<d).
    unfold c, d.
    rewrite Qlt_minus in ab |- *.
+(*   repeat rewrite Qred_extr_Qred. *)
    rewrite (Qred_correct ((2#3)*a+(1#3)*b)). 
    rewrite (Qred_correct  ((1#3)*a+(2#3)*b)).
    setoid_replace ((1 # 3) * a + (2 # 3) * b + - ((2 # 3) * a + (1 # 3) * b))
@@ -446,7 +447,7 @@ apply (Build_itvl c b).
   fedup.
 apply (Build_itvl a d).
   fedup.
-Qed.
+Defined.
 
 (* The cauchy sequence giving sqrt(2) is finally obtained 
     by the left borders of these intervals. *)
@@ -454,7 +455,7 @@ Qed.
 Definition sqrt2: R. 
 apply (Build_R (fun n => lft (sqrt2_approx n)) (fun k => plus k k)).
 fedup.
-Qed.
+Defined.
 
 Extraction Inline Zcompare_rec Z_lt_rec.
 Extraction "sqrt2.ml" sqrt2.
