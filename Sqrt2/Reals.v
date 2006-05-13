@@ -422,12 +422,12 @@ Definition sqrt2_approx : nat -> itvl.
 induction 1. 
 apply (Build_itvl 1 2); unfold Qlt; simpl; omega.
 elim IHnat; intros a b ab.
-set (c:= (Qred ((2#3)*a+(1#3)*b))).
-set (d:= (Qred ((1#3)*a+(2#3)*b))).
+set (c:= (Qred_extr ((2#3)*a+(1#3)*b))).
+set (d:= (Qred_extr ((1#3)*a+(2#3)*b))).
 assert (cd : c<d).
    unfold c, d.
    rewrite Qlt_minus in ab |- *.
-(*   repeat rewrite Qred_extr_Qred. *)
+   repeat rewrite Qred_extr_Qred.
    rewrite (Qred_correct ((2#3)*a+(1#3)*b)). 
    rewrite (Qred_correct  ((1#3)*a+(2#3)*b)).
    setoid_replace ((1 # 3) * a + (2 # 3) * b + - ((2 # 3) * a + (1 # 3) * b))
