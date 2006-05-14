@@ -95,7 +95,7 @@ Proof.
 intros; apply Qeq_trans with (Qfactor_twos q); auto.
 unfold Qred.
 destruct (Qfactor_twos q) as (n,d); red; simpl.
-generalize (Zggcd_gcd n ('d)) (Zgcd_pos n ('d)) 
+generalize (Zggcd_gcd n ('d)) (Zgcd_is_pos n ('d)) 
   (Zgcd_is_gcd n ('d)) (Zggcd_correct_divisors n ('d)).
 destruct (Zggcd n (Zpos d)) as (g,(nn,dd)); simpl.
 Open Scope Z_scope.
@@ -128,10 +128,10 @@ destruct (Qfactor_twos q) as (c,d); clear p q.
 unfold Qeq in *; simpl in *.
 Open Scope Z_scope.
 generalize (Zggcd_gcd a ('b)) (Zgcd_is_gcd a ('b)) 
- (Zgcd_pos a ('b)) (Zggcd_correct_divisors a ('b)).
+ (Zgcd_is_pos a ('b)) (Zggcd_correct_divisors a ('b)).
 destruct (Zggcd a (Zpos b)) as (g,(aa,bb)).
 generalize (Zggcd_gcd c ('d)) (Zgcd_is_gcd c ('d)) 
- (Zgcd_pos c ('d)) (Zggcd_correct_divisors c ('d)).
+ (Zgcd_is_pos c ('d)) (Zggcd_correct_divisors c ('d)).
 destruct (Zggcd c (Zpos d)) as (g',(cc,dd)).
 simpl.
 intro H; rewrite <- H; clear H.
@@ -218,7 +218,7 @@ destruct (Zggcd_spec_pos (' p) (Zle_0_pos p) n) as ((g,(pp,nn)),H).
 generalize (H (Zle_0_pos p)); clear H; intros (Hg1,(Hg2,(Hg4,Hg3))).
 simpl.
 generalize (Zggcd_gcd n ('p)) (Zgcd_is_gcd n ('p)) 
- (Zgcd_pos n ('p)) (Zggcd_correct_divisors n ('p)).
+ (Zgcd_is_pos n ('p)) (Zggcd_correct_divisors n ('p)).
 destruct (Zggcd n (Zpos p)) as (g',(nn',pp')); simpl.
 intro H; rewrite <- H; clear H.
 intros Hg'1 Hg'2 (Hg'3,Hg'4).
