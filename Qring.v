@@ -33,12 +33,10 @@ exact Qplus_comm.
 exact Qplus_assoc.
 exact Qmult_comm.
 exact Qmult_assoc.
-intro; rewrite Qplus_comm; apply Qzero_right.
-intro; rewrite Qmult_comm; apply Qmult_n_1.
-exact Qplus_inverse_r.
-intros; rewrite Qmult_comm;
- rewrite (Qmult_comm n p); rewrite (Qmult_comm m p);
- apply Qmult_plus_distr_r; auto.
+exact Qplus_0_l.
+exact Qmult_1_l.
+exact Qplus_opp_r.
+exact Qmult_plus_distr_l.
 unfold Is_true; intros x y; generalize (Qeq_bool_correct x y);
  case (Qeq_bool x y); auto.
 Qed.

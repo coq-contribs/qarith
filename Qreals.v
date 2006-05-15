@@ -138,7 +138,7 @@ Qed.
 Lemma Q2R_plus : forall x y : Q, Q2R (x+y) = (Q2R x + Q2R y)%R.
 unfold Qplus, Qeq, Q2R in |- *; intros (x1, x2) (y1, y2);
  unfold Qden, Qnum in |- *.
-kill_times.
+simpl_mult.
 rewrite plus_IZR.
 do 3 rewrite mult_IZR.
 field; auto.
@@ -147,7 +147,7 @@ Qed.
 Lemma Q2R_mult : forall x y : Q, Q2R (x*y) = (Q2R x * Q2R y)%R.
 unfold Qmult, Qeq, Q2R in |- *; intros (x1, x2) (y1, y2);
  unfold Qden, Qnum in |- *.
-kill_times.
+simpl_mult.
 do 2 rewrite mult_IZR.
 field; auto.
 Qed.
@@ -192,8 +192,7 @@ Ltac QField := apply eqR_Qeq; autorewrite with q2r_simpl; try field; auto.
 
 (* Examples of use: *)
 
-Goal
-forall x y z : Q, (x+y)*z == (x*z)+(y*z).
+Goal forall x y z : Q, (x+y)*z == (x*z)+(y*z).
 intros; QField.
 Abort.
 

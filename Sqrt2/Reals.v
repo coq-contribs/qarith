@@ -51,11 +51,11 @@ red; intros.
 assert (H1: q-q == 0) by ring.
 rewrite H1; clear H1.
 assert (0 <= (1#2)^k).
- apply Qpower_le_0. 
+ apply Qpower_pos. 
  compute; intro; discriminate.
 split; auto.
 replace 0 with (-0) by auto.
-apply Qle_opp; auto.
+apply Qopp_le_compat; auto.
 Defined.
 
 (* Extraction inject_Q. *)
@@ -130,12 +130,12 @@ split.
 
 apply Qle_trans with (- (1#2)^(S k)+ -(1#2)^(S k)).
 rewrite <- Qopp_plus.
-apply Qle_opp.
+apply Qopp_le_compat.
 rewrite H3; clear H3; apply Qle_refl.
-apply Qle_plus_compat; auto.
+apply Qplus_le_compat; auto.
 
 apply Qle_trans with ((1#2)^(S k) + (1#2)^(S k)).
-apply Qle_plus_compat; auto.
+apply Qplus_le_compat; auto.
 rewrite H3; clear H3; apply Qle_refl.
 Defined.
 
@@ -172,7 +172,7 @@ exists (modulus x (S k)).
 intros.
 (*fedup.*)
 destruct (x.(is_cauchy) (S k) n (modulus x (S k))) as (Hx,_); auto.
-assert (H0:=Qle_plus_compat _ _ _ _ Hk Hx).
+assert (H0:=Qplus_le_compat _ _ _ _ Hk Hx).
 setoid_replace (cauchy x (modulus x (S k)) + (cauchy x n - cauchy x (modulus x (S k))))
  with (cauchy x n) in H0; [|ring]. 
 setoid_replace ((1 # 2) ^ k + - (1 # 2) ^ S k) with ((1#2)^(S k)) in H0; [|simpl; ring].
@@ -191,11 +191,11 @@ destruct (x.(is_cauchy) (S (S l)) M N) as (Hx,_); auto.
 unfold N, M; auto with arith.
 apply Qle_trans with ((1#2)^l+(-(1#2)^(S (S l)))).
 setoid_replace ((1#2)^l + (- (1 # 2) ^(S (S l)))) with ((3#4)*(1#2)^l); [|simpl; ring].
-simpl; apply Qle_mult_compat.
-apply Qpower_le_0; compute; intro; discriminate.
+simpl; apply Qmult_le_compat_r.
 compute; intro; discriminate.
+apply Qpower_pos; compute; intro; discriminate.
 setoid_replace (cauchy x M) with (cauchy x N +(cauchy x M - cauchy x N)); [|ring].
-apply Qle_plus_compat; auto.
+apply Qplus_le_compat; auto.
 apply Hp; unfold N; auto with arith.
 Defined.
 
@@ -220,13 +220,13 @@ unfold q', k''; auto with arith.
 unfold q, k''; eauto with arith.
 assert (p <= q)%nat by unfold q; eauto with arith.
 assert (H0:=Hp q H); clear Hp H. 
-assert (H1:=Qle_opp _ _ (Qlt_le_weak _ _ q0)); clear q0.
+assert (H1:=Qopp_le_compat _ _ (Qlt_le_weak _ _ q0)); clear q0.
 set (Yq' := cauchy y q') in *; set (Yq := cauchy y q) in *; 
  set (Zq' := cauchy z q') in *; set (Zq := cauchy z q) in *; 
  set (Xq := cauchy x q) in *; clearbody q q' Yq Yq' Zq Zq' Xq.
-generalize (Qle_plus_compat _ _ _ _ Hy
-                   (Qle_plus_compat _ _ _ _ H0 
-                       (Qle_plus_compat _ _ _ _ H1 Hz))).
+generalize (Qplus_le_compat _ _ _ _ Hy
+                   (Qplus_le_compat _ _ _ _ H0 
+                       (Qplus_le_compat _ _ _ _ H1 Hz))).
 setoid_replace ((1#2)^k') with ((1#4)*(1#2)^k); [|simpl; ring].
 setoid_replace ((1#2)^k'') with ((1#16)*(1#2)^k); [|simpl; ring].
 simpl.
@@ -237,9 +237,9 @@ match goal with |- ?a <= ?b -> _ =>
 end. (* Pourquoi ring ne marche sur le dernier bout ? *)
 intros.
 apply Qle_trans with ((3#8)*(1#2)^k); auto.
-apply Qle_mult_compat.
-apply Qpower_le_0; compute; intro; discriminate.
+apply Qmult_le_compat_r.
 compute; intro; discriminate.
+apply Qpower_pos; compute; intro; discriminate.
 (*fedup.*)
 red; simpl cauchy; simpl cauchy in Hp.
 set (q' := max (modulus z (S (S k'))) (modulus x (S (S k')))).
@@ -253,8 +253,8 @@ clear Hp.
 set (Xq' := cauchy x q') in *; set (Xq := cauchy x q) in *; 
  set (Zq' := cauchy z q') in *; set (Zq := cauchy z q) in *; 
  clearbody q q' Xq Xq' Zq Zq'.
-generalize (Qle_plus_compat _ _ _ _ Hz
-                   (Qle_plus_compat _ _ _ _ q0 Hx)).
+generalize (Qplus_le_compat _ _ _ _ Hz
+                   (Qplus_le_compat _ _ _ _ q0 Hx)).
 setoid_replace ((1#2)^k') with ((1#4)*(1#2)^k); [|simpl; ring].
 setoid_replace ((1#2)^k'') with ((1#16)*(1#2)^k); [|simpl; ring].
 simpl.
@@ -265,9 +265,9 @@ match goal with |- ?a <= ?b -> _ =>
 end. (* Pourquoi ring ne marche sur le dernier bout ? *)
 intros.
 apply Qle_trans with ((3#8)*(1#2)^k); auto.
-apply Qle_mult_compat.
-apply Qpower_le_0; compute; intro; discriminate.
+apply Qmult_le_compat_r.
 compute; intro; discriminate.
+apply Qpower_pos; compute; intro; discriminate.
 Defined.
 
 (* Specialized continuity components for sqr2 = X^2-2 *)
@@ -341,16 +341,16 @@ rewrite  two_p_correct.
 rewrite log_sup_log_sup.
 set (ab := (Qden b * Qden a)%positive) in *.
 assert ('ab <= two_p (log_sup ab)).
- red; simpl; kill_times; destruct (log_sup_correct2 ab) as (_,H0); omega.
-apply Qle_mult_compat2 with (two_p (log_sup ab)).
+ red; simpl; simpl_mult; destruct (log_sup_correct2 ab) as (_,H0); omega.
+apply Qmult_lt_0_le_reg_r with (two_p (log_sup ab)).
 apply Qlt_le_trans with ('ab); [compute|]; auto.
 rewrite Qmult_comm.
-rewrite Qinv_Qmult.
+rewrite Qmult_inv_r.
 intro; rewrite H1 in H0; compute in H0; auto.
 rewrite Qmult_comm.
 apply Qle_trans with ('ab*(b+-a)); [|
- apply Qle_mult_compat; auto; 
- rewrite <- Qle_minus; apply Qlt_le_weak; auto].
+ apply Qmult_le_compat_r; auto; 
+ rewrite <- Qle_minus_iff; apply Qlt_le_weak; auto].
 unfold ab; red; simpl.
 set (baab := ((Qnum b)*'(Qden a)+-(Qnum a)*'(Qden b))%Z).
 assert (1 <= baab)%Z.
@@ -359,7 +359,7 @@ destruct baab.
 (*baab = 0*)
 elim H1; auto.
 (*baab>0*)
-kill_times.
+simpl_mult.
 rewrite Zmult_1_r.
 assert (H2:=Zmult_le_compat (' Qden b * ' Qden a) 1 (' Qden b * ' Qden a) ('p)).
 rewrite Zmult_1_r in H2.
@@ -426,7 +426,7 @@ set (c:= (Qred_extr ((2#3)*a+(1#3)*b))).
 set (d:= (Qred_extr ((1#3)*a+(2#3)*b))).
 assert (cd : c<d).
    unfold c, d.
-   rewrite Qlt_minus in ab |- *.
+   rewrite Qlt_minus_iff in ab |- *.
    repeat rewrite Qred_extr_Qred.
    rewrite (Qred_correct ((2#3)*a+(1#3)*b)). 
    rewrite (Qred_correct  ((1#3)*a+(2#3)*b)).
@@ -434,7 +434,7 @@ assert (cd : c<d).
    with ((b+-a)*((2#3)-(1#3))); [|ring].
    setoid_replace ((2#3)-(1#3)) with (1#3); [|compute; auto].
    setoid_replace 0 with (0*(1#3)); [|compute;auto].
-   apply Qlt_mult_compat; [compute|]; auto.
+   apply Qmult_lt_compat_r; [compute|]; auto.
 set (fc := sqr2_apply (inject_Q c)).
 set (fd := sqr2_apply (inject_Q d)).
 assert (fcfd : Rlt fc fd).
