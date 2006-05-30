@@ -125,7 +125,7 @@ set (Yn := cauchy y n) in *; set (Ym := cauchy y m) in *.
 destruct H5; destruct H6.
 assert ((Xm+Ym-(Xn+Yn)) == ((Xm-Xn) +(Ym-Yn))) by ring.
 rewrite H3; clear H3.
-assert ((1#2)^(S k) + (1#2)^(S k) == (1#2)^k) by simpl; ring.
+assert ((1#2)^(S k) + (1#2)^(S k) == (1#2)^k) by (simpl; ring).
 split.
 
 apply Qle_trans with (- (1#2)^(S k)+ -(1#2)^(S k)).
@@ -218,7 +218,7 @@ unfold q', k''; auto with arith.
 destruct (y.(is_cauchy) k'' q' q) as (Hy,_); auto. 
 unfold q', k''; auto with arith.
 unfold q, k''; eauto with arith.
-assert (p <= q)%nat by unfold q; eauto with arith.
+assert (p <= q)%nat by (unfold q; eauto with arith).
 assert (H0:=Hp q H); clear Hp H. 
 assert (H1:=Qopp_le_compat _ _ (Qlt_le_weak _ _ q0)); clear q0.
 set (Yq' := cauchy y q') in *; set (Yq := cauchy y q) in *; 
