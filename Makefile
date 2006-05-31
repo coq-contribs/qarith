@@ -46,7 +46,7 @@ OPT=
 COQFLAGS=-q $(OPT) $(COQLIBS) $(OTHERFLAGS) $(COQ_XML)
 COQC=$(COQBIN)coqc
 GALLINA=gallina
-COQDOC=coqdoc
+COQDOC=$(COQBIN)coqdoc
 CAMLC=ocamlc -c
 CAMLOPTC=ocamlopt -c
 CAMLLINK=ocamlc
@@ -71,39 +71,14 @@ COQLIBS=-I .
 #                                 #
 ###################################
 
-VFILES=QArith_base.v\
-  Qreals.v\
-  Qreduction.v\
-  Qring.v\
-  QArith.v
+VFILES=
 VOFILES=$(VFILES:.v=.vo)
 VIFILES=$(VFILES:.v=.vi)
 GFILES=$(VFILES:.v=.g)
 HTMLFILES=$(VFILES:.v=.html)
 GHTMLFILES=$(VFILES:.v=.g.html)
 
-all: QArith_base.vo\
-  Qreals.vo\
-  Qreduction.vo\
-  Qring.vo\
-  QArith.vo\
-  Sqrt2
-
-spec: $(VIFILES)
-
-gallina: $(GFILES)
-
-html: $(HTMLFILES)
-
-gallinahtml: $(GHTMLFILES)
-
-all.ps: $(VFILES)
-	$(COQDOC) -ps -o $@ `$(COQDEP) -sort -suffix .v $(VFILES)`
-
-all-gal.ps: $(VFILES)
-	$(COQDOC) -ps -g -o $@ `$(COQDEP) -sort -suffix .v $(VFILES)`
-
-
+all: Sqrt2
 
 ###################
 #                 #
@@ -122,46 +97,17 @@ Sqrt2:
 
 .PHONY: all opt byte archclean clean install depend html Sqrt2
 
-.SUFFIXES: .v .vo .vi .g .html .tex .g.tex .g.html
-
-.v.vo:
-	$(COQC) $(COQDEBUG) $(COQFLAGS) $*
-
-.v.vi:
-	$(COQC) -i $(COQDEBUG) $(COQFLAGS) $*
-
-.v.g:
-	$(GALLINA) $<
-
-.v.tex:
-	$(COQDOC) -latex $< -o $@
-
-.v.html:
-	$(COQDOC) -html $< -o $@
-
-.v.g.tex:
-	$(COQDOC) -latex -g $< -o $@
-
-.v.g.html:
-	$(COQDOC) -html -g $< -o $@
-
 byte:
 	$(MAKE) all "OPT="
 
 opt:
 	$(MAKE) all "OPT=-opt"
 
-include .depend
-
 .depend depend:
-	rm -f .depend
-	$(COQDEP) -i $(COQLIBS) $(VFILES) *.ml *.mli >.depend
-	$(COQDEP) $(COQLIBS) -suffix .html $(VFILES) >>.depend
 	(cd Sqrt2 ; $(MAKE) depend)
 
 install:
 	mkdir -p `$(COQC) -where`/user-contrib
-	cp -f $(VOFILES) `$(COQC) -where`/user-contrib
 	(cd Sqrt2 ; $(MAKE) install)
 
 Makefile: Make
