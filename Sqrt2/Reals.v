@@ -18,6 +18,7 @@ Require Export Max.
 Require Export Zpower.
 Require Export Zlogarithm.
 Require Export QArith.
+Open Scope Z_scope.
 Open Scope Q_scope.
 
 Coercion inject_Z : Z >-> Q.
