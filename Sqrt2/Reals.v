@@ -18,10 +18,18 @@ Require Export Max.
 Require Export Zpower.
 Require Export Zlogarithm.
 Require Export QArith.
+Require Export Qpower.
 Open Scope Z_scope.
 Open Scope Q_scope.
 
 Coercion inject_Z : Z >-> Q.
+Coercion Local Z_of_nat : nat >-> Z.
+
+Ltac QpowerSimpl :=
+(repeat rewrite inj_S;
+ unfold Zsucc;
+ repeat rewrite Qpower_plus; try discriminate;
+ simpl).
 
 (**** A quick & dirty implementation of constructive reals. ****)
 (****      Based on Pr. Schwichtenberg lecture notes.        ****)
@@ -127,7 +135,7 @@ set (Yn := cauchy y n) in *; set (Ym := cauchy y m) in *.
 destruct H5; destruct H6.
 assert ((Xm+Ym-(Xn+Yn)) == ((Xm-Xn) +(Ym-Yn))) by ring.
 rewrite H3; clear H3.
-assert ((1#2)^(S k) + (1#2)^(S k) == (1#2)^k) by (simpl; ring).
+assert ((1#2)^(S k) + (1#2)^(S k) == (1#2)^k) by (QpowerSimpl;ring).
 split.
 
 apply Qle_trans with (- (1#2)^(S k)+ -(1#2)^(S k)).
@@ -177,7 +185,7 @@ destruct (x.(is_cauchy) (S k) n (modulus x (S k))) as (Hx,_); auto.
 assert (H0:=Qplus_le_compat _ _ _ _ Hk Hx).
 setoid_replace (cauchy x (modulus x (S k)) + (cauchy x n - cauchy x (modulus x (S k))))
  with (cauchy x n) in H0; [|ring]. 
-setoid_replace ((1 # 2) ^ k + - (1 # 2) ^ S k) with ((1#2)^(S k)) in H0; [|simpl; ring].
+setoid_replace ((1 # 2) ^ k + - (1 # 2) ^ S k) with ((1#2)^(S k)) in H0; [|QpowerSimpl;ring].
 auto.
 Defined.
 
@@ -192,8 +200,8 @@ set (N:=max p M).
 destruct (x.(is_cauchy) (S (S l)) M N) as (Hx,_); auto. 
 unfold N, M; auto with arith.
 apply Qle_trans with ((1#2)^l+(-(1#2)^(S (S l)))).
-setoid_replace ((1#2)^l + (- (1 # 2) ^(S (S l)))) with ((3#4)*(1#2)^l); [|simpl; ring].
-simpl; apply Qmult_le_compat_r.
+setoid_replace ((1#2)^l + (- (1 # 2) ^(S (S l)))) with ((3#4)*(1#2)^l); [|QpowerSimpl;ring].
+QpowerSimpl; rewrite Qmult_comm; apply Qmult_le_compat_r.
 compute; intro; discriminate.
 apply Qpower_pos; compute; intro; discriminate.
 setoid_replace (cauchy x M) with (cauchy x N +(cauchy x M - cauchy x N)); [|ring].
@@ -229,12 +237,12 @@ set (Yq' := cauchy y q') in *; set (Yq := cauchy y q) in *;
 generalize (Qplus_le_compat _ _ _ _ Hy
                    (Qplus_le_compat _ _ _ _ H0 
                        (Qplus_le_compat _ _ _ _ H1 Hz))).
-setoid_replace ((1#2)^k') with ((1#4)*(1#2)^k); [|simpl; ring].
-setoid_replace ((1#2)^k'') with ((1#16)*(1#2)^k); [|simpl; ring].
-simpl.
+setoid_replace ((1#2)^k') with ((1#4)*(1#2)^k); [|unfold k';QpowerSimpl;ring].
+setoid_replace ((1#2)^k'') with ((1#16)*(1#2)^k); [|unfold k'', k';QpowerSimpl; ring].
+QpowerSimpl.
 match goal with |- ?a <= ?b -> _ => 
  setoid_replace b with (Yq'+-Zq'); [|ring];
- setoid_replace a with ((-(1#16)+1-(1#2)+-(1#16))*(1#2)^k); [|ring]; 
+ setoid_replace a with ((-(1#16)+1-(1#2)+-(1#16))*(1#2)^k); [|ring];
  setoid_replace (-(1#16)+1-(1#2)+-(1#16)) with (3#8); [|compute; auto]
 end. (* Pourquoi ring ne marche sur le dernier bout ? *)
 intros.
@@ -257,9 +265,9 @@ set (Xq' := cauchy x q') in *; set (Xq := cauchy x q) in *;
  clearbody q q' Xq Xq' Zq Zq'.
 generalize (Qplus_le_compat _ _ _ _ Hz
                    (Qplus_le_compat _ _ _ _ q0 Hx)).
-setoid_replace ((1#2)^k') with ((1#4)*(1#2)^k); [|simpl; ring].
-setoid_replace ((1#2)^k'') with ((1#16)*(1#2)^k); [|simpl; ring].
-simpl.
+setoid_replace ((1#2)^k') with ((1#4)*(1#2)^k); [|unfold k'', k';QpowerSimpl; ring].
+setoid_replace ((1#2)^k'') with ((1#16)*(1#2)^k); [|unfold k'',k';QpowerSimpl; ring].
+QpowerSimpl.
 match goal with |- ?a <= ?b -> _ => 
  setoid_replace b with (Zq'+-Xq'); [|ring];
  setoid_replace a with ((-(1#16)+(1#2)+-(1#16))*(1#2)^k); [|ring]; 
@@ -315,20 +323,29 @@ Defined.
 
 Require Import nat_log.
 
-Lemma two_p_correct : forall n, 2^n = two_p (Z_of_nat n).
+Lemma two_p_correct : forall (n:nat), 2^n == two_p n.
 Proof.
 induction n.
-simpl; auto.
-simpl.
+reflexivity.
+QpowerSimpl.
 rewrite IHn; clear IHn.
 unfold Z_of_nat, two_p.
 destruct n.
-simpl; auto.
+reflexivity.
 simpl.
 set (p:=P_of_succ_nat n).
 unfold two_power_pos.
 do 2 rewrite shift_pos_nat; unfold shift_nat.
-rewrite nat_of_P_succ_morphism; simpl; auto.
+rewrite <- Pplus_one_succ_r.
+rewrite nat_of_P_succ_morphism.
+simpl.
+unfold Qeq.
+simpl.
+rewrite <- Pmult_assoc.
+rewrite (Pmult_comm 2).
+rewrite Pmult_assoc.
+rewrite Pmult_comm.
+reflexivity.
 Qed.
 
 (* The strict order is conserved when injecting Q in R. *)
