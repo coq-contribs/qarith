@@ -31,6 +31,31 @@ Ltac QpowerSimpl :=
  repeat rewrite Qpower_plus; try discriminate;
  simpl).
 
+
+Ltac get_hd := match goal with |- ?H -> _ => H end.
+Ltac get_gl := match goal with |- ?H => H end.
+
+Ltac lhs H := 
+ match H with 
+  | ?a <= _ => a
+  | ?a < _ => a 
+  | ?a == _ => a
+ end.
+
+Ltac rhs H := 
+ match H with 
+  | _ <= ?a => a
+  | _ < ?a => a 
+  | _ == ?a => a
+ end.
+
+Ltac step_left t :=  let H := get_gl in let a := lhs H in setoid_replace a with t by (QpowerSimpl;ring).
+Ltac step_right t :=  let H := get_gl in let a := rhs H in setoid_replace a with t by (QpowerSimpl;ring).
+Ltac step_left_hd t :=  let H := get_hd in let a := lhs H in setoid_replace a with t by (QpowerSimpl;ring).
+Ltac step_right_hd t := let H := get_hd in let a := rhs H in setoid_replace a with t by (QpowerSimpl;ring).
+Ltac step t := let a := lhs t in step_left a; let b := rhs t in step_right b.
+Ltac step_hd t := let a := lhs t in step_left_hd a; let b := rhs t in step_right_hd b.
+
 (**** A quick & dirty implementation of constructive reals. ****)
 (****      Based on Pr. Schwichtenberg lecture notes.        ****)
 (****      Main objective: sqrt(2) as root of X^2 -2  in [1;2]   ****) 
@@ -118,6 +143,11 @@ Proof.
 eauto with arith.
 Qed.
 
+Lemma Qeq_Qle : forall a b:Q, a==b -> a<=b.
+Proof.
+intros; setoid_replace a with b by auto; apply Qle_refl.
+Qed.
+
 Definition Rplus : R -> R -> R.
 Proof.
 intros x y.
@@ -133,20 +163,12 @@ clear N M H H0 H1 H2 H3 H4.
 set (Xn := cauchy x n) in *; set (Xm := cauchy x m) in *; 
 set (Yn := cauchy y n) in *; set (Ym := cauchy y m) in *.
 destruct H5; destruct H6.
-assert ((Xm+Ym-(Xn+Yn)) == ((Xm-Xn) +(Ym-Yn))) by ring.
-rewrite H3; clear H3.
-assert ((1#2)^(S k) + (1#2)^(S k) == (1#2)^k) by (QpowerSimpl;ring).
+setoid_replace (Xm+Ym-(Xn+Yn)) with ((Xm-Xn) +(Ym-Yn)) by ring.
 split.
-
-apply Qle_trans with (- (1#2)^(S k)+ -(1#2)^(S k)).
-rewrite <- Qopp_plus.
-apply Qopp_le_compat.
-rewrite H3; clear H3; apply Qle_refl.
+step_left (-(1#2)^(S k)+-(1#2)^(S k)).
 apply Qplus_le_compat; auto.
-
-apply Qle_trans with ((1#2)^(S k) + (1#2)^(S k)).
+step_right ((1#2)^(S k)+(1#2)^(S k)).
 apply Qplus_le_compat; auto.
-rewrite H3; clear H3; apply Qle_refl.
 Defined.
 
 (* Extraction Rplus. *)
@@ -182,11 +204,8 @@ exists (modulus x (S k)).
 intros.
 (*fedup.*)
 destruct (x.(is_cauchy) (S k) n (modulus x (S k))) as (Hx,_); auto.
-assert (H0:=Qplus_le_compat _ _ _ _ Hk Hx).
-setoid_replace (cauchy x (modulus x (S k)) + (cauchy x n - cauchy x (modulus x (S k))))
- with (cauchy x n) in H0; [|ring]. 
-setoid_replace ((1 # 2) ^ k + - (1 # 2) ^ S k) with ((1#2)^(S k)) in H0; [|QpowerSimpl;ring].
-auto.
+generalize (Qplus_le_compat _ _ _ _ Hk Hx).
+step_hd ((1#2)^(S k)<=cauchy x n); auto.
 Defined.
 
 Lemma Rpos_alt_2 : forall x, Rpos_alt x -> Rpos x.
@@ -200,11 +219,9 @@ set (N:=max p M).
 destruct (x.(is_cauchy) (S (S l)) M N) as (Hx,_); auto. 
 unfold N, M; auto with arith.
 apply Qle_trans with ((1#2)^l+(-(1#2)^(S (S l)))).
-setoid_replace ((1#2)^l + (- (1 # 2) ^(S (S l)))) with ((3#4)*(1#2)^l); [|QpowerSimpl;ring].
-QpowerSimpl; rewrite Qmult_comm; apply Qmult_le_compat_r.
-compute; intro; discriminate.
-apply Qpower_pos; compute; intro; discriminate.
-setoid_replace (cauchy x M) with (cauchy x N +(cauchy x M - cauchy x N)); [|ring].
+step ((1#2)*(1#2)^l<=(3#4)*(1#2)^l).
+apply Qmult_le_compat_r; [|apply Qpower_pos]; compute; intro; discriminate.
+step_right (cauchy x N +(cauchy x M - cauchy x N)).
 apply Qplus_le_compat; auto.
 apply Hp; unfold N; auto with arith.
 Defined.
@@ -237,19 +254,12 @@ set (Yq' := cauchy y q') in *; set (Yq := cauchy y q) in *;
 generalize (Qplus_le_compat _ _ _ _ Hy
                    (Qplus_le_compat _ _ _ _ H0 
                        (Qplus_le_compat _ _ _ _ H1 Hz))).
-setoid_replace ((1#2)^k') with ((1#4)*(1#2)^k); [|unfold k';QpowerSimpl;ring].
-setoid_replace ((1#2)^k'') with ((1#16)*(1#2)^k); [|unfold k'', k';QpowerSimpl; ring].
-QpowerSimpl.
-match goal with |- ?a <= ?b -> _ => 
- setoid_replace b with (Yq'+-Zq'); [|ring];
- setoid_replace a with ((-(1#16)+1-(1#2)+-(1#16))*(1#2)^k); [|ring];
- setoid_replace (-(1#16)+1-(1#2)+-(1#16)) with (3#8); [|compute; auto]
-end. (* Pourquoi ring ne marche sur le dernier bout ? *)
+unfold k'', k'.
+step_hd ((3#8)*(1#2)^k <= Yq'+-Zq').
 intros.
+step_left ((1#4)*(1#2)^k).
 apply Qle_trans with ((3#8)*(1#2)^k); auto.
-apply Qmult_le_compat_r.
-compute; intro; discriminate.
-apply Qpower_pos; compute; intro; discriminate.
+apply Qmult_le_compat_r; [|apply Qpower_pos]; compute; intro; discriminate.
 (*fedup.*)
 red; simpl cauchy; simpl cauchy in Hp.
 set (q' := max (modulus z (S (S k'))) (modulus x (S (S k')))).
@@ -265,19 +275,12 @@ set (Xq' := cauchy x q') in *; set (Xq := cauchy x q) in *;
  clearbody q q' Xq Xq' Zq Zq'.
 generalize (Qplus_le_compat _ _ _ _ Hz
                    (Qplus_le_compat _ _ _ _ q0 Hx)).
-setoid_replace ((1#2)^k') with ((1#4)*(1#2)^k); [|unfold k'', k';QpowerSimpl; ring].
-setoid_replace ((1#2)^k'') with ((1#16)*(1#2)^k); [|unfold k'',k';QpowerSimpl; ring].
-QpowerSimpl.
-match goal with |- ?a <= ?b -> _ => 
- setoid_replace b with (Zq'+-Xq'); [|ring];
- setoid_replace a with ((-(1#16)+(1#2)+-(1#16))*(1#2)^k); [|ring]; 
- setoid_replace (-(1#16)+(1#2)+-(1#16)) with (3#8); [|compute; auto]
-end. (* Pourquoi ring ne marche sur le dernier bout ? *)
+unfold k'', k'.
+step_hd ((3#8)*(1#2)^k <= Zq'+-Xq').
 intros.
+step_left ((1#4)*(1#2)^k).
 apply Qle_trans with ((3#8)*(1#2)^k); auto.
-apply Qmult_le_compat_r.
-compute; intro; discriminate.
-apply Qpower_pos; compute; intro; discriminate.
+apply Qmult_le_compat_r; [|apply Qpower_pos]; compute; intro; discriminate.
 Defined.
 
 (* Specialized continuity components for sqr2 = X^2-2 *)
@@ -294,8 +297,13 @@ intros x.
 apply (Build_R (fun n => sqr2_h (cauchy x n) n) 
                        (fun k => max (sqr2_alpha (S (S k))) 
                                         (modulus x (pred (sqr2_w (S k)))))).
-unfold Is_Cauchy, sqr2_h, sqr2_alpha, sqr2_w; simpl; intros.
-fedup.  
+generalize x.(is_cauchy).
+unfold Is_Cauchy, sqr2_h, sqr2_alpha, sqr2_w, sqr2; simpl; intros.
+(*fedup.*)
+generalize (H _ _ _ H0 H1); clear H H0 H1; intro H.
+destruct x; simpl.
+unfold cauchy; simpl.
+fedup.
 Defined.
 
 (* sqr2 is strictly increasing at least on interval [1;infinity] *)
@@ -309,8 +317,14 @@ unfold Rpos_alt, Rminus, Ropp, Rplus; simpl; unfold sqr2_h; simpl.
 intro H1; elim H1; intros k Hk; elim Hk; intros p Hp; clear H Hk.
 exists (pred k).
 exists p.
+(*fedup*)
 intros.
-generalize (Hp _ H); clear Hp H; intros.
+generalize (Hp _ H); clear Hp; intros.
+unfold sqr2.
+step_right ((cauchy y n +-cauchy x n)*(cauchy y n + cauchy x n)).
+red in H0.
+red in H0.
+simpl in H0.
 fedup.
 Defined.
 
@@ -447,11 +461,8 @@ assert (cd : c<d).
    unfold c, d.
    rewrite Qlt_minus_iff in ab |- *.
    rewrite (Qred_correct ((2#3)*a+(1#3)*b)). 
-   rewrite (Qred_correct  ((1#3)*a+(2#3)*b)).
-   setoid_replace ((1 # 3) * a + (2 # 3) * b + - ((2 # 3) * a + (1 # 3) * b))
-   with ((b+-a)*((2#3)-(1#3))); [|ring].
-   setoid_replace ((2#3)-(1#3)) with (1#3); [|compute; auto].
-   setoid_replace 0 with (0*(1#3)); [|compute;auto].
+   rewrite (Qred_correct ((1#3)*a+(2#3)*b)).
+   step (0*(1#3) <= (b+-a)*(1#3)).
    apply Qmult_lt_compat_r; [compute|]; auto.
 set (fc := sqr2_apply (inject_Q c)).
 set (fd := sqr2_apply (inject_Q d)).
