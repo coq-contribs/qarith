@@ -145,7 +145,7 @@ Qed.
 
 Lemma Qeq_Qle : forall a b:Q, a==b -> a<=b.
 Proof.
-intros; setoid_replace a with b by auto; apply Qle_refl.
+intros. setoid_replace a with b by auto. apply Qle_refl.
 Qed.
 
 Definition Rplus : R -> R -> R.
@@ -378,8 +378,7 @@ assert ('ab <= two_p (log_sup ab)).
 apply Qmult_lt_0_le_reg_r with (two_p (log_sup ab)).
 apply Qlt_le_trans with ('ab); [compute|]; auto.
 rewrite Qmult_comm.
-rewrite Qmult_inv_r.
-intro; rewrite H1 in H0; compute in H0; auto.
+rewrite Qmult_inv_r by (intro H1; rewrite H1 in H0; auto).
 rewrite Qmult_comm.
 apply Qle_trans with ('ab*(b+-a)); [|
  apply Qmult_le_compat_r; auto; 
