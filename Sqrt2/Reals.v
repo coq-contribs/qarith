@@ -22,6 +22,8 @@ Require Export Qpower.
 Open Scope Z_scope.
 Open Scope Q_scope.
 
+Unset Standard Proposition Elimination Names.
+
 Coercion inject_Z : Z >-> Q.
 Coercion Local Z_of_nat : nat >-> Z.
 
