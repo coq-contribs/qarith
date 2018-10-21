@@ -24,10 +24,8 @@ Open Scope Q_scope.
 
 Require Extraction.
 
-Unset Standard Proposition Elimination Names.
-
 Coercion inject_Z : Z >-> Q.
-Coercion Local Z_of_nat : nat >-> Z.
+Local Coercion Z_of_nat : nat >-> Z.
 
 Ltac QpowerSimpl :=
 (repeat rewrite inj_S;
@@ -59,6 +57,8 @@ Ltac step_left_hd t :=  let H := get_hd in let a := lhs H in setoid_replace a wi
 Ltac step_right_hd t := let H := get_hd in let a := rhs H in setoid_replace a with t by (QpowerSimpl;ring).
 Ltac step t := let a := lhs t in step_left a; let b := rhs t in step_right b.
 Ltac step_hd t := let a := lhs t in step_left_hd a; let b := rhs t in step_right_hd b.
+
+Local Notation " ' x " := (Zpos x) (at level 20, no associativity) : Z_scope.
 
 (**** A quick & dirty implementation of constructive reals. ****)
 (****      Based on Pr. Schwichtenberg lecture notes.        ****)
