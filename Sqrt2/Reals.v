@@ -29,7 +29,7 @@ Local Coercion Z_of_nat : nat >-> Z.
 
 Ltac QpowerSimpl :=
 (repeat rewrite inj_S;
- unfold Zsucc;
+ unfold Z.succ;
  repeat rewrite Qpower_plus; try discriminate;
  simpl).
 
@@ -400,7 +400,7 @@ rewrite Zmult_1_r.
 assert (H2:=Zmult_le_compat (' Qden b * ' Qden a) 1 (' Qden b * ' Qden a) ('p)).
 rewrite Zmult_1_r in H2.
 apply H2; auto.
-apply Zle_refl.
+apply Z.le_refl.
 compute; intro; discriminate.
 compute; intro; discriminate.
 (*baab<0*)
